@@ -875,6 +875,43 @@
       pointer-events: none;
     }
 
+    /* Stocks disabled state — iter-9 W mode */
+    body.iter-9 .card-stocks.card-disabled {
+      border: 1px solid #252A2C;
+      background: linear-gradient(180deg, var(--background-backgroundTertiary, #1E2224) 0%, var(--background-backgroundPrimary, #060809) 100%);
+      pointer-events: none;
+    }
+    .card-w-content { display: none; }
+    body.iter-9 .card-stocks.card-disabled .card-normal-content { display: none; }
+    body.iter-9 .card-stocks.card-disabled .card-w-content { display: flex; flex-direction: column; align-items: flex-end; }
+
+    /* Collapse wrapper for iter-9 stocks card — no wrapper, card is direct child */
+
+    /* Show-more / view-more CTA (iter-9) */
+    .show-more-btn-9 {
+      display: none;
+      padding-bottom: 12px;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      align-self: stretch;
+      background: transparent;
+      border: none;
+      color: #696E70;
+      text-align: center;
+      font-family: 'Sohne', -apple-system, sans-serif;
+      font-size: 10px;
+      font-style: normal;
+      font-weight: 500;
+      line-height: 12px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 36px; /* clear the -24px card stack margin */
+    }
+    body.iter-9 .show-more-btn-9.visible { display: flex; }
+
     /* ── Iteration 6 ── */
     body.iter-5 .header .w-toggle      { display: none !important; }
     body.iter-5 .mf-top-nav .w-toggle  { display: none !important; }
@@ -906,7 +943,24 @@
     body.iter-9 .mf-card-toggle-wrap   { display: none; }
     body.iter-9 .assets-hdr-toggle     { display: flex; }
 
-    /* ── Simulation panel (right side) ── */
+    /* ── Iteration 10 ── */
+    body.iter-10 .header .w-toggle      { display: none !important; }
+    body.iter-10 .mf-top-nav .w-toggle  { display: none !important; }
+    body.iter-10 .mf-card-toggle-wrap   { display: none; }
+    body.iter-10 .assets-hdr-toggle     { display: flex; }
+
+    body.iter-10 .card-stocks {
+      transition: transform 0.42s cubic-bezier(0.4, 0, 0.2, 1),
+                  opacity  0.38s cubic-bezier(0.4, 0, 0.2, 1),
+                  margin-bottom 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    body.iter-10 .card-stocks.card-disabled {
+      border: 1px solid #252A2C;
+      background: linear-gradient(180deg, var(--background-backgroundTertiary, #1E2224) 0%, var(--background-backgroundPrimary, #060809) 100%);
+      pointer-events: none;
+    }
+    body.iter-10 .card-stocks.card-disabled .card-normal-content { display: none; }
+    body.iter-10 .card-stocks.card-disabled .card-w-content      { display: flex; flex-direction: column; align-items: flex-end; }
     #sim-panel {
       position: fixed;
       right: 0; top: 0; bottom: 0;
@@ -1177,9 +1231,13 @@
           STOCKS &amp; ETF
         </div>
       </div>
-      <div class="card-right">
+      <div class="card-right card-normal-content">
         <div class="card-amount">₹23.92Cr</div>
         <div class="pos">+₹10.54L 1D</div>
+      </div>
+      <div class="card-right card-w-content">
+        <div class="card-amount">0.00</div>
+        <div class="muted">0 Holding with W</div>
       </div>
     </div>
 
@@ -1208,7 +1266,7 @@
         </div>
       </div>
       <div class="card-right">
-        <div class="card-amount">₹2.45Cr</div>
+        <div class="card-amount">₹4.00Cr</div>
         <div class="muted">1 AIFs</div>
       </div>
     </div>
@@ -1223,7 +1281,7 @@
         </div>
       </div>
       <div class="card-right">
-        <div class="card-amount">₹51.29L</div>
+        <div class="card-amount">₹5.00Cr</div>
         <div class="pos">+₹15,004.34 1D</div>
       </div>
     </div>
@@ -1243,10 +1301,14 @@
       </div>
     </div>
 
+    <!-- Iter-9: view more CTA (shown when stocks card is hidden) -->
+    <button class="show-more-btn-9" onclick="toggleShowMore9()">
+      <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.5 3.5L5 7L8.5 3.5" stroke="#696E70" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      SHOW 1 MORE
+    </button>
+
   </div>
 </div>
-
-<!-- Iteration 4: skeleton loader overlay -->
 <div id="skel4">
   <div class="s4-hdr">
     <div class="s4-bar s4-pill"></div>
@@ -1778,6 +1840,14 @@
       </div>
     </div>
 
+    <div class="iter-item" onclick="switchIter(10)">
+      <div class="iter-badge">10</div>
+      <div class="iter-info">
+        <div class="iter-name">Value Sort on Toggle</div>
+        <div class="iter-tag">Cards reorder highest → lowest</div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -1856,8 +1926,8 @@ window.simFire = function () {
      Each entry: [selector, offVal, onVal, prefix, suffix, decimals] */
   const CARDS = [
     ['.card-mutual  .card-amount', 3542, 2107, '₹', 'L',  2],
-    ['.card-aif     .card-amount',  245,  192, '₹', 'Cr', 2],
-    ['.card-pms     .card-amount', 5129, 3847, '₹', 'L',  2],
+    ['.card-aif     .card-amount',  400,  400, '₹', 'Cr', 2],
+    ['.card-pms     .card-amount',  500,  300, '₹', 'Cr', 2],
   ];
 
   let nwRaf = null;
@@ -2883,10 +2953,221 @@ window.simFire = function () {
     setTimeout(() => cards.forEach(c => { c.style.transition = ''; }), 560);
   }
 
+  /* ── Iter-10: value-sorted FLIP reorder ──
+     Sort keys in hundredths-of-L (common unit) derived from the same CARDS values
+     used for display, so changing a card's off/on value auto-updates sort order.
+     AIF is in Cr so its CARDS values are multiplied by 100 to normalise to L.
+     Unlisted has no tracked value — treated as always-last among active cards.
+     Stocks is 0 when W is ON so it always sorts to the bottom (disabled). */
+  const SORT_KEYS_10 = {
+    'card-stocks':  { off: 239200, on: 0     }, // 23.92 Cr = 2392 L = 239200 hundredths-L
+    'card-aif':     { off: 40000,  on: 40000 }, // 4.00 Cr → stays 4.00 Cr with W
+    'card-pms':     { off: 50000,  on: 30000 }, // 5.00 Cr → drops to 3.00 Cr with W
+    'card-mutual':  { off: 3542,   on: 2107  }, // CARDS vals already in hundredths-L
+    'card-unlisted':{ off: 1,      on: 1     }, // always last among non-disabled
+  };
+
+  function iter10GetOrder(toOn) {
+    const state = toOn ? 'on' : 'off';
+    return Object.keys(SORT_KEYS_10)
+      .sort((a, b) => SORT_KEYS_10[b][state] - SORT_KEYS_10[a][state]);
+  }
+
+  function iter10ReorderCards(toOn, animate) {
+    const container = document.querySelector('#screen-home .cards');
+    const cards     = Array.from(container.querySelectorAll('.card'));
+    const target    = iter10GetOrder(toOn);
+    const stocksCard = container.querySelector('.card-stocks');
+
+    if (!animate) {
+      target.forEach(cls => {
+        const c = container.querySelector('.' + cls);
+        if (c) container.insertBefore(c, container.querySelector('.show-more-btn-9') || null);
+      });
+      if (toOn) stocksCard.classList.add('card-disabled');
+      else      stocksCard.classList.remove('card-disabled');
+      return;
+    }
+
+    /* Phase 1 — all cards breathe together so user sees every card react */
+    /* FLIP — record positions before reorder */
+    const before = {};
+    cards.forEach(card => {
+      const key = Array.from(card.classList).find(c => c !== 'card' && c.startsWith('card-'));
+      before[key] = card.getBoundingClientRect().top;
+    });
+
+    /* Reorder DOM */
+    const btn = container.querySelector('.show-more-btn-9');
+    target.forEach(cls => {
+      const c = container.querySelector('.' + cls);
+      if (c) container.insertBefore(c, btn || null);
+    });
+
+    /* Apply inverse transforms */
+    cards.forEach(card => {
+      const key = Array.from(card.classList).find(c => c !== 'card' && c.startsWith('card-'));
+      const delta = before[key] - card.getBoundingClientRect().top;
+      card.style.transition = 'none';
+      card.style.transform  = `translateY(${delta}px)`;
+    });
+
+    container.getBoundingClientRect();
+    cards.forEach(card => {
+      card.style.transition = 'transform 0.48s cubic-bezier(0.4, 0, 0.2, 1)';
+      card.style.transform  = '';
+    });
+    setTimeout(() => cards.forEach(c => { c.style.transition = ''; }), 520);
+
+    /* toggle disabled state mid-animation */
+    setTimeout(() => {
+      if (toOn) stocksCard.classList.add('card-disabled');
+      else      stocksCard.classList.remove('card-disabled');
+    }, 240);
+  }
+
+  /* ── Iter-9: W toggle handler ── */
+  function iter9ToggleW(toOn) {
+    const container   = document.querySelector('#screen-home .cards');
+    const stocksCard  = container.querySelector('.card-stocks');
+    const showMoreBtn = container.querySelector('.show-more-btn-9');
+    if (!stocksCard) return;
+
+    const cards  = Array.from(container.querySelectorAll('.card'));
+    const target = iter10GetOrder(toOn);
+    const btn    = container.querySelector('.show-more-btn-9');
+
+    if (toOn) {
+      /* 1 — FLIP all cards to W-ON sorted order */
+      const before = {};
+      cards.forEach(card => {
+        const key = Array.from(card.classList).find(c => c !== 'card' && c.startsWith('card-'));
+        before[key] = card.getBoundingClientRect().top;
+      });
+
+      target.forEach(cls => {
+        const c = container.querySelector('.' + cls);
+        if (c) container.insertBefore(c, btn || null);
+      });
+
+      cards.forEach(card => {
+        const key = Array.from(card.classList).find(c => c !== 'card' && c.startsWith('card-'));
+        const delta = before[key] - card.getBoundingClientRect().top;
+        card.style.transition = 'none';
+        card.style.transform  = `translateY(${delta}px)`;
+      });
+
+      container.getBoundingClientRect();
+      cards.forEach(card => {
+        card.style.transition = 'transform 0.48s cubic-bezier(0.4, 0, 0.2, 1)';
+        card.style.transform  = '';
+      });
+      setTimeout(() => cards.forEach(c => { c.style.transition = ''; }), 520);
+
+      /* 2 — after FLIP settles: shrink + fade stocks to zero, then CTA rises */
+      setTimeout(() => {
+        stocksCard.classList.add('card-disabled');
+        stocksCard.style.zIndex     = '6';
+        stocksCard.style.transition = 'transform 0.26s ease, opacity 0.26s ease';
+        stocksCard.style.transform  = 'scale(0.85) translateY(30px)';
+        stocksCard.style.opacity    = '0';
+
+        setTimeout(() => {
+          /* card is invisible — pull it from layout and clean up */
+          stocksCard.style.display    = 'none';
+          stocksCard.style.transition = '';
+          stocksCard.style.transform  = '';
+          stocksCard.style.opacity    = '';
+
+          /* CTA fades in */
+          if (showMoreBtn) {
+            showMoreBtn.style.opacity    = '0';
+            showMoreBtn.classList.add('visible');
+            showMoreBtn.getBoundingClientRect();
+            showMoreBtn.style.transition = 'opacity 0.22s ease';
+            showMoreBtn.style.opacity    = '1';
+            setTimeout(() => {
+              showMoreBtn.style.transition = '';
+              showMoreBtn.style.opacity    = '';
+            }, 240);
+          }
+        }, 280);
+      }, 480);
+
+    } else {
+      /* W turning OFF */
+      if (showMoreBtn) {
+        showMoreBtn.classList.remove('visible');
+        showMoreBtn.style.transition = '';
+        showMoreBtn.style.opacity    = '';
+        showMoreBtn.innerHTML = '<svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.5 3.5L5 7L8.5 3.5" stroke="#696E70" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg> SHOW 1 MORE';
+      }
+
+      /* make stocks visible in place (still at DOM bottom) so FLIP can measure it */
+      stocksCard.classList.remove('card-disabled');
+      stocksCard.classList.remove('card-hidden');
+      stocksCard.style.display = 'flex';
+      stocksCard.style.zIndex  = '';
+
+      /* 1 — FLIP all cards back to W-OFF sorted order */
+      const before = {};
+      cards.forEach(card => {
+        const key = Array.from(card.classList).find(c => c !== 'card' && c.startsWith('card-'));
+        before[key] = card.getBoundingClientRect().top;
+      });
+
+      target.forEach(cls => {
+        const c = container.querySelector('.' + cls);
+        if (c) container.insertBefore(c, btn || null);
+      });
+
+      cards.forEach(card => {
+        const key = Array.from(card.classList).find(c => c !== 'card' && c.startsWith('card-'));
+        const delta = before[key] - card.getBoundingClientRect().top;
+        card.style.transition = 'none';
+        card.style.transform  = `translateY(${delta}px)`;
+      });
+
+      container.getBoundingClientRect();
+      cards.forEach(card => {
+        card.style.transition = 'transform 0.48s cubic-bezier(0.4, 0, 0.2, 1)';
+        card.style.transform  = '';
+      });
+      setTimeout(() => cards.forEach(c => { c.style.transition = ''; }), 520);
+    }
+  }
+
+  window.toggleShowMore9 = function () {
+    const container  = document.querySelector('#screen-home .cards');
+    const stocksCard = container ? container.querySelector('.card-stocks') : null;
+    const btn        = container ? container.querySelector('.show-more-btn-9') : null;
+    if (!stocksCard) return;
+
+    const isHidden = stocksCard.style.display === 'none';
+    if (isHidden) {
+      /* clear card-hidden instantly (scale/transform snap to normal before paint) */
+      stocksCard.style.transition = 'none';
+      stocksCard.classList.remove('card-hidden');
+      stocksCard.style.opacity = '0';
+      stocksCard.style.display = 'flex';
+      stocksCard.getBoundingClientRect(); /* force reflow so start state commits */
+      stocksCard.style.transition = ''; /* hand back to CSS: opacity 0.38s */
+      stocksCard.style.opacity    = ''; /* fade to 1 */
+      if (btn) btn.innerHTML = '<svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M8.5 6.5L5 3L1.5 6.5" stroke="#696E70" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg> SHOW LESS';
+    } else {
+      /* add card-hidden → CSS transitions handle opacity fade + margin-bottom collapse */
+      stocksCard.classList.add('card-hidden');
+      setTimeout(() => { stocksCard.style.display = 'none'; }, 420);
+      if (btn) btn.innerHTML = '<svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.5 3.5L5 7L8.5 3.5" stroke="#696E70" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg> SHOW 1 MORE';
+    }
+  };
+
   window.toggleWManaged = function (btn) {
     const isOn    = btn.classList.contains('on');
     const isIter3 = document.body.classList.contains('iter-3');
     const isIter8 = document.body.classList.contains('iter-8');
+    const isIter9 = document.body.classList.contains('iter-9');
+    const isIter10 = document.body.classList.contains('iter-10');
 
     /* iter-8: if toggling while on stocks panel, turn ON and switch to MF panel */
     if (isIter8 && document.getElementById('screen-mf').classList.contains('active') &&
@@ -2916,6 +3197,10 @@ window.simFire = function () {
       if (isIter3) {
         stocksCard.classList.add('card-disabled');
         iter3ReorderCards(true, true);
+      } else if (isIter9) {
+        iter9ToggleW(true);
+      } else if (isIter10) {
+        iter10ReorderCards(true, true);
       } else {
         stocksCard.classList.add('card-hidden');
       }
@@ -2933,6 +3218,10 @@ window.simFire = function () {
       if (isIter3) {
         stocksCard.classList.remove('card-disabled');
         iter3ReorderCards(false, true);
+      } else if (isIter9) {
+        iter9ToggleW(false);
+      } else if (isIter10) {
+        iter10ReorderCards(false, true);
       } else {
         const s = stocksCard.style;
         s.transition   = 'none';
@@ -3041,11 +3330,12 @@ window.simFire = function () {
     const wIsOn      = document.querySelector('.w-toggle').classList.contains('on');
     const wasIter3   = document.body.classList.contains('iter-3');
     const wasIter4   = document.body.classList.contains('iter-4');
+    const wasIter10  = document.body.classList.contains('iter-10');
     const stocksCard = document.querySelector('.card-stocks');
 
     if (wasIter4) stopSkel4Anim();
 
-    document.body.classList.remove('iter-2', 'iter-3', 'iter-4', 'iter-5', 'iter-6', 'iter-7', 'iter-8', 'iter-9');
+    document.body.classList.remove('iter-2','iter-3','iter-4','iter-5','iter-6','iter-7','iter-8','iter-9','iter-10');
 
     /* If W is currently ON, reconcile card state for the new iteration */
     if (wIsOn) {
@@ -3060,16 +3350,44 @@ window.simFire = function () {
         iter3ReorderCards(true, false);
         stocksCard.classList.add('card-disabled');
       }
+      /* leaving iter-9: restore card to top, clean up iter-9 state */
+      if (document.body.classList.contains('iter-9') && n !== 9) {
+        const c9 = document.querySelector('#screen-home .cards');
+        const showMoreBtn = c9 ? c9.querySelector('.show-more-btn-9') : null;
+        if (showMoreBtn) showMoreBtn.classList.remove('visible');
+        if (c9) c9.insertBefore(stocksCard, c9.children[0]);
+        stocksCard.classList.remove('card-disabled');
+        stocksCard.style.display = '';
+        stocksCard.style.zIndex  = '';
+        stocksCard.classList.add('card-hidden');
+      }
     }
 
-    if (n === 2) document.body.classList.add('iter-2');
-    if (n === 3) document.body.classList.add('iter-3');
-    if (n === 4) { document.body.classList.add('iter-4'); startSkel4Anim(); }
-    if (n === 5) document.body.classList.add('iter-5');
-    if (n === 6) document.body.classList.add('iter-6');
-    if (n === 7) document.body.classList.add('iter-7');
-    if (n === 8) document.body.classList.add('iter-8');
-    if (n === 9) document.body.classList.add('iter-9');
+    if (n === 2)  document.body.classList.add('iter-2');
+    if (n === 3)  document.body.classList.add('iter-3');
+    if (n === 4)  { document.body.classList.add('iter-4'); startSkel4Anim(); }
+    if (n === 5)  document.body.classList.add('iter-5');
+    if (n === 6)  document.body.classList.add('iter-6');
+    if (n === 7)  document.body.classList.add('iter-7');
+    if (n === 8)  document.body.classList.add('iter-8');
+    if (n === 9)  document.body.classList.add('iter-9');
+    if (n === 10) document.body.classList.add('iter-10');
+
+    /* iter-10: apply value-sorted order immediately (no animation) */
+    if (n === 10) {
+      iter10ReorderCards(wIsOn, false);
+    }
+    /* leaving iter-10: restore default card order */
+    if (wasIter10 && n !== 10) {
+      const container = document.querySelector('#screen-home .cards');
+      const btn = container.querySelector('.show-more-btn-9');
+      ['card-stocks','card-mutual','card-aif','card-pms','card-unlisted'].forEach(cls => {
+        const c = container.querySelector('.' + cls);
+        if (c) container.insertBefore(c, btn || null);
+      });
+      stocksCard.classList.remove('card-disabled');
+      if (wIsOn) stocksCard.classList.add('card-hidden');
+    }
 
     /* Re-sync Stocks tab visibility for the new iteration */
     syncMFTabs(wIsOn);
