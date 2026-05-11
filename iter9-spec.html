@@ -354,6 +354,33 @@
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 3px; }
+
+  /* ── Accordion ── */
+  .spec-section { gap: 0; }
+  .spec-section-title {
+    cursor: pointer; user-select: none;
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 0;
+  }
+  .spec-section-title:hover { color: #9AA0A3; }
+  .acc-chevron {
+    width: 16px; height: 16px; color: #5A6268; flex-shrink: 0;
+    transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
+  }
+  .spec-section.open .acc-chevron { transform: rotate(180deg); }
+  .acc-body {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.32s cubic-bezier(0.4,0,0.2,1);
+  }
+  .spec-section.open .acc-body { grid-template-rows: 1fr; }
+  .acc-inner {
+    overflow: hidden;
+    display: flex; flex-direction: column; gap: 16px;
+    padding-top: 0;
+    transition: padding-top 0.32s cubic-bezier(0.4,0,0.2,1);
+  }
+  .spec-section.open .acc-inner { padding-top: 16px; }
 </style>
 </head>
 <body>
@@ -1093,6 +1120,27 @@ sweepP.value = <span class="c-fn">withTiming</span>(<span class="c-num">1</span>
     init();
   }
 })();
+
+/* ── Accordion ── */
+document.querySelectorAll('.spec-section').forEach((section, i) => {
+  const title = section.querySelector('.spec-section-title');
+  const chevron = document.createElement('span');
+  chevron.className = 'acc-chevron';
+  chevron.innerHTML = `<svg viewBox="0 0 16 16" fill="none" width="16" height="16"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  title.appendChild(chevron);
+
+  const children = Array.from(section.children).slice(1);
+  const inner = document.createElement('div');
+  inner.className = 'acc-inner';
+  children.forEach(c => inner.appendChild(c));
+  const body = document.createElement('div');
+  body.className = 'acc-body';
+  body.appendChild(inner);
+  section.appendChild(body);
+
+  if (i === 0) section.classList.add('open');
+  title.addEventListener('click', () => section.classList.toggle('open'));
+});
 </script>
 </body>
 </html>
