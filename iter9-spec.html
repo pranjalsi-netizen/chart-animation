@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>iter-9 · Chart Load Animation Spec</title>
+<title>iter-9 · Animation Spec</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -11,15 +11,16 @@
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
     background: #080A0C;
     color: #D4D8DA;
-    min-height: 100vh;
+    height: 100vh;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
   }
 
   /* ── Top bar ── */
   .topbar {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 18px 32px;
+    padding: 14px 28px;
     border-bottom: 1px solid rgba(255,255,255,0.06);
     flex-shrink: 0;
   }
@@ -34,1092 +35,572 @@
   .topbar-sub { font-size: 12px; color: #5A6268; }
 
   /* ── Main layout ── */
-  .main {
-    display: flex;
-    flex: 1;
-    min-height: 0;
-  }
+  .main { display: flex; flex: 1; min-height: 0; }
 
-  /* ── LEFT: demo column ── */
+  /* ── LEFT: prototype column ── */
   .demo-col {
-    width: 380px;
-    flex-shrink: 0;
+    width: 400px; flex-shrink: 0;
     border-right: 1px solid rgba(255,255,255,0.06);
-    padding: 40px 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 28px;
-    overflow-y: auto;
+    display: flex; flex-direction: column;
+    background: #060809;
   }
   .demo-label {
     font-size: 10px; font-weight: 600; letter-spacing: 0.1em;
-    color: #5A6268; text-transform: uppercase; text-align: center;
+    color: #5A6268; text-transform: uppercase;
+    padding: 16px 20px 12px; flex-shrink: 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
   }
-
-  /* Phone mockup */
-  .phone-shell {
-    width: 320px;
-    background: #0C0C0C;
-    border-radius: 32px;
-    border: 1.5px solid rgba(255,255,255,0.09);
-    overflow: hidden;
-    box-shadow: 0 32px 80px rgba(0,0,0,0.6);
+  .iframe-wrap {
+    flex: 1; min-height: 0; position: relative; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    background: #080A0C;
   }
-  .phone-header {
-    padding: 18px 18px 10px;
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  .phone-header-left { display: flex; flex-direction: column; gap: 2px; }
-  .phone-ticker { font-size: 10px; color: #5A6268; letter-spacing: 0.04em; }
-  .phone-value { font-size: 22px; font-weight: 700; color: #F2F5F7; font-variant-numeric: tabular-nums; }
-  .phone-change { font-size: 11px; color: #4DA4DD; }
-  .phone-toggle-badge {
-    display: flex; align-items: center; gap: 8px;
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 20px;
-    padding: 5px 10px;
-    font-size: 11px; color: #7A8287; cursor: default;
-  }
-
-  /* Chart area inside phone */
-  .chart-area {
-    position: relative;
-    width: 100%;
-    height: 120px;
-    overflow: hidden;
-  }
-  .chart-area svg {
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-  }
-  .chart-area canvas {
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    display: block;
-  }
-
-  .phone-footer {
-    padding: 12px 18px 18px;
-    display: flex; align-items: center; justify-content: space-between;
-    border-top: 1px solid rgba(255,255,255,0.05);
-    margin-top: 4px;
-  }
-  .phone-footer-stat { display: flex; flex-direction: column; gap: 2px; }
-  .phone-footer-label { font-size: 10px; color: #5A6268; }
-  .phone-footer-val { font-size: 13px; font-weight: 600; color: #F2F5F7; }
-
-  /* Toggle button */
-  .demo-controls { display: flex; flex-direction: column; align-items: center; gap: 14px; width: 100%; padding: 0 32px; }
-  .toggle-wrap {
-    display: flex; align-items: center; justify-content: space-between;
-    width: 100%;
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.07);
-    border-radius: 14px;
-    padding: 14px 18px;
-    cursor: pointer;
-    transition: background 0.2s;
-  }
-  .toggle-wrap:hover { background: rgba(255,255,255,0.05); }
-  .toggle-left { display: flex; flex-direction: column; gap: 3px; }
-  .toggle-label { font-size: 13px; font-weight: 600; color: #F2F5F7; }
-  .toggle-sub { font-size: 11px; color: #5A6268; }
-  .pill-track {
-    width: 44px; height: 26px; border-radius: 13px;
-    background: #1E2426;
-    border: 1px solid rgba(255,255,255,0.08);
-    position: relative;
-    transition: background 0.25s;
+  .iframe-phone {
+    width: 360px; height: 100%;
+    border: none; display: block;
     flex-shrink: 0;
   }
-  .pill-track.on { background: #C7A865; border-color: #C7A865; }
-  .pill-dot {
-    position: absolute;
-    top: 3px; left: 3px;
-    width: 18px; height: 18px;
-    border-radius: 50%; background: #fff;
-    transition: transform 0.25s cubic-bezier(0.4,0,0.2,1);
-    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  .demo-footer {
+    flex-shrink: 0;
+    padding: 14px 20px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    display: flex; gap: 10px;
   }
-  .pill-track.on .pill-dot { transform: translateX(18px); }
-
-  .replay-btn {
-    width: 100%;
-    padding: 11px;
-    border-radius: 12px;
+  .demo-btn {
+    flex: 1; padding: 10px;
+    border-radius: 10px;
     border: 1px solid rgba(255,255,255,0.08);
-    background: none;
-    color: #7A8287;
+    background: none; color: #7A8287;
     font-size: 12px; font-weight: 500;
     cursor: pointer;
-    transition: color 0.15s, border-color 0.15s;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
   }
-  .replay-btn:hover { color: #C7A865; border-color: rgba(199,168,101,0.3); }
-
-  .phase-indicator {
-    width: 100%; padding: 0 32px;
-    display: flex; flex-direction: column; gap: 6px;
-  }
-  .phase-label { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; color: #5A6268; text-transform: uppercase; }
-  .phase-bar-wrap { position: relative; height: 4px; background: rgba(255,255,255,0.06); border-radius: 2px; overflow: hidden; }
-  .phase-bar { height: 100%; width: 0%; background: #C7A865; border-radius: 2px; transition: width 0.1s linear; }
-  .phase-name {
-    font-size: 11px; color: #7A8287; min-height: 14px;
-    display: flex; align-items: center; gap: 6px;
-  }
-  .phase-dot {
-    width: 6px; height: 6px; border-radius: 50%; background: #C7A865;
-    animation: pulseDot 1s ease-in-out infinite;
-    display: none;
-  }
-  .phase-dot.active { display: block; }
-  @keyframes pulseDot {
-    0%,100% { opacity: 1; } 50% { opacity: 0.2; }
-  }
+  .demo-btn:hover { color: #F2F5F7; border-color: rgba(255,255,255,0.15); background: rgba(255,255,255,0.03); }
+  .demo-btn.primary { color: #C7A865; border-color: rgba(199,168,101,0.3); background: rgba(199,168,101,0.06); }
+  .demo-btn.primary:hover { background: rgba(199,168,101,0.1); }
 
   /* ── RIGHT: spec column ── */
   .spec-col {
-    flex: 1;
-    overflow-y: auto;
-    padding: 40px 48px;
-    display: flex;
-    flex-direction: column;
-    gap: 40px;
+    flex: 1; display: flex; flex-direction: column; min-height: 0; overflow: hidden;
   }
 
-  .spec-section { display: flex; flex-direction: column; gap: 16px; }
+  /* Tab strip */
+  .spec-tabs {
+    display: flex; gap: 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    flex-shrink: 0; padding: 0 28px;
+  }
+  .spec-tab {
+    font-size: 12px; font-weight: 600;
+    padding: 14px 18px;
+    color: #5A6268; background: none; border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+    margin-bottom: -1px;
+  }
+  .spec-tab:hover { color: #9AA0A3; }
+  .spec-tab.active { color: #C7A865; border-bottom-color: #C7A865; }
+
+  /* Tab panels */
+  .tab-panel { display: none; flex: 1; overflow-y: auto; padding: 32px 48px; flex-direction: column; gap: 28px; }
+  .tab-panel.active { display: flex; }
+
+  /* Spec section */
+  .spec-section { display: flex; flex-direction: column; gap: 0; }
   .spec-section-title {
     font-size: 11px; font-weight: 700; letter-spacing: 0.12em;
     color: #5A6268; text-transform: uppercase;
     padding-bottom: 12px;
     border-bottom: 1px solid rgba(255,255,255,0.06);
+    cursor: pointer; user-select: none;
+    display: flex; align-items: center; justify-content: space-between;
+    transition: color 0.15s;
   }
+  .spec-section-title:hover { color: #7A8287; }
+  .acc-chevron {
+    width: 16px; height: 16px; color: #5A6268; flex-shrink: 0;
+    transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
+  }
+  .spec-section.open .acc-chevron { transform: rotate(180deg); color: #C7A865; }
+  .acc-body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.32s cubic-bezier(0.4,0,0.2,1); }
+  .spec-section.open .acc-body { grid-template-rows: 1fr; }
+  .acc-inner { overflow: hidden; display: flex; flex-direction: column; gap: 16px; padding-top: 0; transition: padding-top 0.32s cubic-bezier(0.4,0,0.2,1); }
+  .spec-section.open .acc-inner { padding-top: 16px; }
 
-  /* Overview */
-  .overview-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .overview-card {
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.07);
-    border-radius: 12px;
-    padding: 14px 16px;
-    display: flex; flex-direction: column; gap: 4px;
-  }
+  /* Overview cards */
+  .overview-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .overview-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; }
   .ov-label { font-size: 10px; color: #5A6268; letter-spacing: 0.04em; }
   .ov-value { font-size: 15px; font-weight: 600; color: #F2F5F7; font-variant-numeric: tabular-nums; }
   .ov-sub { font-size: 11px; color: #7A8287; }
 
   /* Timeline */
-  .timeline { display: flex; flex-direction: column; gap: 0; }
-  .tl-row {
-    display: grid;
-    grid-template-columns: 90px 24px 1fr;
-    gap: 0 12px;
-    align-items: start;
-    min-height: 60px;
-  }
-  .tl-time {
-    font-size: 11px; font-weight: 600; color: #C7A865;
-    font-variant-numeric: tabular-nums;
-    padding-top: 2px; text-align: right;
-  }
+  .timeline { display: flex; flex-direction: column; }
+  .tl-row { display: grid; grid-template-columns: 100px 22px 1fr; gap: 0 12px; align-items: start; min-height: 56px; }
+  .tl-time { font-size: 11px; font-weight: 600; color: #C7A865; font-variant-numeric: tabular-nums; padding-top: 2px; text-align: right; }
   .tl-spine { display: flex; flex-direction: column; align-items: center; }
-  .tl-node {
-    width: 10px; height: 10px; border-radius: 50%;
-    background: #C7A865; flex-shrink: 0; margin-top: 3px;
-    box-shadow: 0 0 8px rgba(199,168,101,0.5);
-  }
+  .tl-node { width: 10px; height: 10px; border-radius: 50%; background: #C7A865; flex-shrink: 0; margin-top: 3px; box-shadow: 0 0 8px rgba(199,168,101,0.5); }
   .tl-node.idle { background: #1E2426; border: 1.5px solid rgba(255,255,255,0.12); box-shadow: none; }
   .tl-line { flex: 1; width: 1.5px; background: rgba(255,255,255,0.08); margin: 4px 0; }
-  .tl-content { padding-bottom: 20px; }
+  .tl-content { padding-bottom: 18px; }
   .tl-phase { font-size: 12px; font-weight: 700; color: #F2F5F7; margin-bottom: 4px; }
   .tl-desc { font-size: 12px; color: #7A8287; line-height: 1.6; }
-  .tl-pill {
-    display: inline-block; font-size: 10px; font-weight: 600;
-    padding: 2px 7px; border-radius: 4px;
-    background: rgba(199,168,101,0.1); color: #C7A865;
-    border: 1px solid rgba(199,168,101,0.2);
-    margin-left: 6px; vertical-align: middle;
-  }
+  .tl-pill { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 4px; background: rgba(199,168,101,0.1); color: #C7A865; border: 1px solid rgba(199,168,101,0.2); margin-left: 6px; vertical-align: middle; }
   .tl-pill.white { background: rgba(255,255,255,0.06); color: #D4D8DA; border-color: rgba(255,255,255,0.1); }
 
-  /* Properties table */
+  /* Props table */
   .prop-table { display: flex; flex-direction: column; gap: 1px; }
-  .prop-row {
-    display: grid;
-    grid-template-columns: 160px 1fr;
-    gap: 12px;
-    padding: 10px 14px;
-    background: rgba(255,255,255,0.02);
-    border-radius: 8px;
-  }
+  .prop-row { display: grid; grid-template-columns: 180px 1fr; gap: 12px; padding: 10px 14px; background: rgba(255,255,255,0.02); border-radius: 8px; }
   .prop-row:hover { background: rgba(255,255,255,0.04); }
   .prop-key { font-size: 12px; color: #5A6268; }
-  .prop-val { font-size: 12px; color: #F2F5F7; font-variant-numeric: tabular-nums; font-family: 'SF Mono', 'Fira Code', monospace; }
+  .prop-val { font-size: 12px; color: #F2F5F7; font-family: 'SF Mono','Fira Code',monospace; font-variant-numeric: tabular-nums; }
   .prop-val.gold { color: #C7A865; }
   .prop-val.note { font-family: inherit; color: #7A8287; font-size: 11px; }
 
-  /* Color swatches */
+  /* Colors */
   .color-grid { display: flex; flex-direction: column; gap: 8px; }
-  .color-row {
-    display: flex; align-items: center; gap: 14px;
-    padding: 10px 14px;
-    background: rgba(255,255,255,0.02);
-    border-radius: 10px;
-  }
-  .color-swatch {
-    width: 32px; height: 32px; border-radius: 8px;
-    flex-shrink: 0; border: 1px solid rgba(255,255,255,0.1);
-  }
+  .color-row { display: flex; align-items: center; gap: 14px; padding: 10px 14px; background: rgba(255,255,255,0.02); border-radius: 10px; }
+  .color-swatch { width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0; border: 1px solid rgba(255,255,255,0.1); }
   .color-info { display: flex; flex-direction: column; gap: 2px; flex: 1; }
   .color-name { font-size: 12px; font-weight: 600; color: #F2F5F7; }
-  .color-hex { font-size: 11px; color: #7A8287; font-family: 'SF Mono', 'Fira Code', monospace; }
+  .color-hex { font-size: 11px; color: #7A8287; font-family: 'SF Mono','Fira Code',monospace; }
   .color-use { font-size: 11px; color: #5A6268; }
 
-  /* Easing visual */
+  /* Easing */
   .easing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .easing-card {
-    background: rgba(255,255,255,0.02);
-    border: 1px solid rgba(255,255,255,0.06);
-    border-radius: 12px;
-    padding: 16px;
-    display: flex; flex-direction: column; gap: 10px;
-  }
+  .easing-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
   .easing-name { font-size: 12px; font-weight: 600; color: #F2F5F7; }
   .easing-formula { font-size: 11px; font-family: 'SF Mono','Fira Code',monospace; color: #C7A865; }
-  .easing-curve svg { display: block; }
   .easing-use { font-size: 11px; color: #5A6268; }
   .easing-rn { font-size: 11px; font-family: 'SF Mono','Fira Code',monospace; color: #7A8287; }
 
   /* Code block */
-  .code-block {
-    background: #0C0E10;
-    border: 1px solid rgba(255,255,255,0.07);
-    border-radius: 12px;
-    padding: 18px 20px;
-    overflow-x: auto;
-  }
-  .code-block pre {
-    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
-    font-size: 12px;
-    line-height: 1.7;
-    color: #D4D8DA;
-    white-space: pre;
-  }
-  .c-kw { color: #C792EA; }
-  .c-fn { color: #82AAFF; }
-  .c-str { color: #C3E88D; }
-  .c-num { color: #F78C6C; }
-  .c-cmt { color: #546E7A; font-style: italic; }
-  .c-gold { color: #C7A865; }
-  .c-type { color: #89DDFF; }
+  .code-block { background: #0C0E10; border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; padding: 18px 20px; overflow-x: auto; }
+  .code-block pre { font-family: 'SF Mono','Fira Code','Consolas',monospace; font-size: 12px; line-height: 1.7; color: #D4D8DA; white-space: pre; }
+  .c-kw { color: #C792EA; } .c-fn { color: #82AAFF; } .c-str { color: #C3E88D; }
+  .c-num { color: #F78C6C; } .c-cmt { color: #546E7A; font-style: italic; }
+  .c-gold { color: #C7A865; } .c-type { color: #89DDFF; }
 
-  /* RN notes */
-  .rn-note {
-    background: rgba(77,164,221,0.06);
-    border: 1px solid rgba(77,164,221,0.15);
-    border-radius: 10px;
-    padding: 12px 16px;
-    font-size: 12px; color: #7A8287; line-height: 1.6;
-  }
+  /* Callouts */
+  .callout { background: rgba(199,168,101,0.06); border: 1px solid rgba(199,168,101,0.2); border-radius: 10px; padding: 12px 16px; font-size: 12px; color: #9A8040; line-height: 1.6; }
+  .callout strong { color: #C7A865; }
+  .rn-note { background: rgba(77,164,221,0.06); border: 1px solid rgba(77,164,221,0.15); border-radius: 10px; padding: 12px 16px; font-size: 12px; color: #7A8287; line-height: 1.6; }
   .rn-note strong { color: #4DA4DD; font-weight: 600; }
 
-  .callout {
-    background: rgba(199,168,101,0.06);
-    border: 1px solid rgba(199,168,101,0.2);
-    border-radius: 10px;
-    padding: 12px 16px;
-    font-size: 12px; color: #9A8040; line-height: 1.6;
-  }
-  .callout strong { color: #C7A865; }
-
-  /* Glyph chips */
+  /* Chips */
   .chips { display: flex; flex-wrap: wrap; gap: 8px; }
-  .chip {
-    font-size: 11px; font-weight: 600; padding: 4px 10px;
-    border-radius: 6px; background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.08);
-    color: #7A8287;
-  }
+  .chip { font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 6px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: #7A8287; }
   .chip.gold { background: rgba(199,168,101,0.08); border-color: rgba(199,168,101,0.2); color: #C7A865; }
   .chip.blue { background: rgba(77,164,221,0.08); border-color: rgba(77,164,221,0.2); color: #4DA4DD; }
 
-  /* Divider */
-  hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); }
+  /* Stagger visualizer */
+  .stagger-vis { display: flex; flex-direction: column; gap: 6px; }
+  .stagger-row { display: flex; align-items: center; gap: 10px; }
+  .stagger-label { font-size: 11px; color: #5A6268; width: 90px; flex-shrink: 0; }
+  .stagger-bar-wrap { flex: 1; height: 6px; background: rgba(255,255,255,0.04); border-radius: 3px; position: relative; }
+  .stagger-bar { height: 100%; border-radius: 3px; background: #C7A865; position: absolute; }
+  .stagger-time { font-size: 10px; color: #5A6268; font-family: 'SF Mono','Fira Code',monospace; width: 60px; text-align: right; flex-shrink: 0; }
 
   /* Scrollbar */
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 3px; }
-
-  /* ── Accordion ── */
-  .spec-section { gap: 0; }
-  .spec-section-title {
-    cursor: pointer; user-select: none;
-    display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 0;
-  }
-  .spec-section-title:hover { color: #9AA0A3; }
-  .acc-chevron {
-    width: 16px; height: 16px; color: #5A6268; flex-shrink: 0;
-    transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
-  }
-  .spec-section.open .acc-chevron { transform: rotate(180deg); }
-  .acc-body {
-    display: grid;
-    grid-template-rows: 0fr;
-    transition: grid-template-rows 0.32s cubic-bezier(0.4,0,0.2,1);
-  }
-  .spec-section.open .acc-body { grid-template-rows: 1fr; }
-  .acc-inner {
-    overflow: hidden;
-    display: flex; flex-direction: column; gap: 16px;
-    padding-top: 0;
-    transition: padding-top 0.32s cubic-bezier(0.4,0,0.2,1);
-  }
-  .spec-section.open .acc-inner { padding-top: 16px; }
 </style>
 </head>
 <body>
 
-<!-- Top bar -->
 <div class="topbar">
   <div class="topbar-left">
     <span class="topbar-badge">iter-9</span>
-    <span class="topbar-title">Chart Load Transition</span>
-    <span class="topbar-sub">White Glow Blink → Gold Sweep → Shape Morph</span>
+    <span class="topbar-title">Animation Spec</span>
+    <span class="topbar-sub">Groww Wealth · React Native handoff</span>
   </div>
-  <div style="font-size:11px;color:#5A6268;">For React Native devs · Groww Wealth</div>
+  <div style="font-size:11px;color:#5A6268;">Toggle W on the prototype to trigger animations</div>
 </div>
 
 <div class="main">
 
-  <!-- ── LEFT: interactive demo ── -->
+  <!-- ── LEFT: full prototype iframe ── -->
   <div class="demo-col">
-    <div class="demo-label">Interactive Demo</div>
-
-    <!-- Phone mockup -->
-    <div class="phone-shell">
-      <div class="phone-header">
-        <div class="phone-header-left">
-          <div class="phone-ticker">WEALTH PORTFOLIO</div>
-          <div class="phone-value" id="demo-value">₹2.34Cr</div>
-          <div class="phone-change">+₹1.12L today</div>
-        </div>
-        <div class="phone-toggle-badge" style="font-size:10px; color:#5A6268; gap:6px;">
-          <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="#5A6268" stroke-width="1.2"/><path d="M7 4v3.5l2 2" stroke="#5A6268" stroke-width="1.2" stroke-linecap="round"/></svg>
-          chart load
-        </div>
-      </div>
-
-      <!-- SVG paths for sampling (opacity:0, just used for getPointAtLength) -->
-      <div class="chart-area">
-        <svg id="demo-svg" viewBox="-0.5 0 361 141" fill="none" xmlns="http://www.w3.org/2000/svg" style="opacity:0;position:absolute;pointer-events:none;">
-          <defs>
-            <linearGradient id="dg" x1="361" y1="70" x2="1" y2="70" gradientUnits="userSpaceOnUse">
-              <stop stop-color="#FFDD8D"/>
-              <stop offset="1" stop-color="#685021"/>
-            </linearGradient>
-          </defs>
-          <!-- W chart (smooth bezier, 13 cubic segments) -->
-          <path id="dp-w" d="M-0.5 118 C12 115,22 111,38 107 C50 104,57 113,68 115 C79 117,86 109,98 103 C110 97,118 95,130 98 C141 101,148 107,160 104 C170 101,175 93,186 89 C197 85,205 82,216 85 C226 88,230 82,240 75 C250 68,254 70,265 67 C275 64,280 57,292 52 C301 48,307 53,317 47 C327 41,334 50,342 47 C349 44,355 39,360.5 36" stroke="url(#dg)" stroke-width="1" stroke-linecap="round" fill="none"/>
-          <!-- Full chart (50-point polyline) -->
-          <path id="dp-full" d="M-0.5 139.791L9.09656 125.38C9.75253 124.395 10.1025 123.238 10.1025 122.054V99.4228C10.1025 98.0442 11.2201 96.9266 12.5988 96.9266C13.7296 96.9266 14.7191 96.1664 15.0106 95.0738L16.9787 87.697C17.4618 85.8863 19.2268 84.7263 21.0806 85.0012C23.1975 85.3151 25.1359 83.7661 25.2966 81.6321L26.6543 63.6027V59.6124C26.6543 58.4877 27.566 57.576 28.6906 57.576C29.47 57.576 30.181 58.0209 30.5219 58.7217L34.252 66.3916C35.0044 67.9385 36.5737 68.9203 38.2939 68.9203H39.0927C40.5592 68.9203 41.8596 69.8627 42.3162 71.2563C43.0302 73.4354 45.6558 74.293 47.5184 72.9554L50.8913 70.5331C52.1454 69.6325 53.887 69.8839 54.8351 71.1024L54.9847 71.2947C55.8131 72.3592 57.3166 72.616 58.4513 71.8869L58.5921 71.7964C59.3104 71.3349 60.2237 71.304 60.9715 71.7158C62.309 72.4525 63.9815 71.7222 64.3505 70.2405L67.8051 56.367C67.9566 55.7587 68.2024 55.178 68.5337 54.6458L71.0119 50.6648C71.2306 50.3136 71.5246 50.0153 71.8728 49.7916C73.1226 48.9886 74.7824 49.305 75.649 50.5116L77.1788 52.6413L80.5189 58.9544C80.6543 59.2154 80.8314 59.4526 81.0431 59.6567C82.4511 61.0138 84.7896 60.4752 85.462 58.6388L86.0366 57.0697L90.4425 51.1127C90.9358 50.4788 91.6367 50.0391 92.4221 49.8709L93.1796 49.7087C93.9971 49.5336 94.8428 49.8415 95.3562 50.5013L95.5785 50.7871C96.4017 51.845 98.0268 51.76 98.7352 50.622C99.1797 49.9079 100.036 49.5647 100.851 49.7741L101.389 49.9123C101.942 50.0546 102.527 50.0165 103.057 49.8035L106.655 48.3588C109.343 47.207 112.446 48.5668 113.421 51.3245L114.084 53.1987L118.072 59.0738C118.525 59.6922 119.245 60.0576 120.012 60.0576C120.95 60.0576 121.803 60.6033 122.196 61.4553L122.66 62.4617C124.057 65.4913 128.281 65.7052 129.977 62.8323L132.034 59.3486L136.862 50.3869C136.953 50.2173 137.021 50.036 137.062 49.848C137.459 48.064 139.79 47.6079 140.83 49.111L142.161 51.035L144.172 59.3486L145.933 65.8547C146.224 66.9308 146.203 68.0676 145.871 69.132L145.851 69.1967C145.167 71.3954 145.857 73.7906 147.605 75.2888L149.568 77.6035C151.016 79.4419 153.401 80.2704 155.678 79.7257L160.982 78.4565C161.773 78.2672 162.595 78.6188 163.004 79.3218C163.713 80.5384 165.468 80.5441 166.185 79.3323L166.266 79.1951L169.819 77.728C170.63 77.5305 171.39 77.1661 172.052 76.658L174.03 75.1399C175.86 73.7356 178.355 73.5718 180.352 74.7249C181.4 75.3299 182.613 75.5858 183.816 75.4556L186.882 75.1238C187.951 75.008 189.032 75.1818 190.011 75.6269L193.459 77.1947L197.348 78.2505C198.005 78.4104 198.63 78.6801 199.196 79.0482L203.123 81.5981C203.925 82.1196 204.841 82.4413 205.794 82.5365L210.259 82.9826C211.039 83.0606 211.827 82.9848 212.578 82.7597L218.104 81.1031L223.084 78.8254C224.038 78.3748 224.856 77.6807 225.456 76.813L227.116 74.4139L232.669 69.0365C233.249 68.494 233.949 68.0963 234.712 67.8756C235.558 67.631 236.453 67.6119 237.308 67.8202L237.538 67.876C239.324 68.311 241.211 67.8934 242.646 66.7453L243.878 65.7604C245.043 64.8282 246.515 64.364 248.004 64.4583L249.845 64.5749C250.793 64.6349 251.741 64.4693 252.611 64.0917L254.818 63.1348C256.644 62.3432 258.766 62.7146 260.214 64.0795C262.914 66.624 267.349 65.428 268.403 61.8709L270.517 54.74L276.332 38.7748L278.15 23.0067C278.21 22.4221 278.357 21.8497 278.584 21.3076L281.803 13.6212C282.194 12.6881 282.815 11.869 283.607 11.2401L286.885 8.63807C287.169 8.41298 287.478 8.22225 287.806 8.06989C289.751 7.1676 292.062 7.73345 293.37 9.43236L294.817 11.3128C295.614 12.3478 296.727 13.0946 297.987 13.4396L300.121 14.0241C301.581 14.4241 302.675 15.6377 302.922 17.1317C303.318 19.5365 305.81 20.9828 308.095 20.1347L311.329 18.9345L313.986 17.9485C314.742 17.6677 315.568 17.633 316.346 17.8494C317.917 18.2868 319.593 17.6813 320.522 16.3406L323.575 11.9339L324.989 10.7717C325.627 10.3572 326.462 10.4148 327.038 10.913C328.047 11.7866 329.623 11.2183 329.842 9.90194L330.905 3.51383C331.141 2.09795 332.951 1.64414 333.827 2.7815C334.546 3.7156 335.986 3.61054 336.562 2.58194L336.762 2.22434C337.208 1.42805 338.154 1.05755 339.022 1.33942L339.875 1.61654C340.479 1.81252 341.129 1.81252 341.733 1.61654L344.434 0.739417C344.922 0.580816 345.432 0.500034 345.946 0.500034C347.811 0.500034 349.514 1.5594 350.338 3.23222L352.576 7.77561C353.072 8.78261 353.985 9.52134 355.074 9.79658L355.394 9.87749C355.895 10.0044 356.423 9.98468 356.913 9.8208C357.886 9.49614 358.958 9.74897 359.683 10.4738L360.5 11.291" stroke="url(#dg)" stroke-width="1" stroke-linecap="round"/>
-        </svg>
-
-        <!-- Live SVG (visible at end) -->
-        <svg id="demo-live-svg" viewBox="-0.5 0 361 141" fill="none" xmlns="http://www.w3.org/2000/svg" style="opacity:1;position:absolute;top:0;left:0;width:100%;height:100%;transition:opacity 0.1s;">
-          <defs>
-            <linearGradient id="dg2" x1="361" y1="70" x2="1" y2="70" gradientUnits="userSpaceOnUse">
-              <stop stop-color="#FFDD8D"/>
-              <stop offset="1" stop-color="#685021"/>
-            </linearGradient>
-          </defs>
-          <path id="demo-line-target" d="" stroke="url(#dg2)" stroke-width="1" stroke-linecap="round" fill="none"/>
-        </svg>
-
-        <canvas id="demo-canvas" width="360" height="141"></canvas>
-      </div>
-
-      <div class="phone-footer">
-        <div class="phone-footer-stat">
-          <div class="phone-footer-label">1W return</div>
-          <div class="phone-footer-val">+2.4%</div>
-        </div>
-        <div class="phone-footer-stat" style="text-align:right;">
-          <div class="phone-footer-label">XIRR</div>
-          <div class="phone-footer-val">18.3%</div>
-        </div>
-      </div>
+    <div class="demo-label">iter-9 Prototype</div>
+    <div class="iframe-wrap">
+      <iframe id="proto-frame" class="iframe-phone" src="wealth-dashboard.html?iter=9&nosim=1" scrolling="no"></iframe>
     </div>
-
-    <!-- Controls -->
-    <div class="demo-controls">
-      <div class="toggle-wrap" id="demo-toggle" onclick="demoToggle()">
-        <div class="toggle-left">
-          <div class="toggle-label">W Toggle</div>
-          <div class="toggle-sub" id="toggle-sub-text">Off · showing full chart</div>
-        </div>
-        <div class="pill-track" id="pill-track">
-          <div class="pill-dot"></div>
-        </div>
-      </div>
-
-      <button class="replay-btn" onclick="demoReplay()">↺ Replay current animation</button>
-    </div>
-
-    <!-- Phase indicator -->
-    <div class="phase-indicator">
-      <div class="phase-label">Animation phase</div>
-      <div class="phase-bar-wrap"><div class="phase-bar" id="phase-bar"></div></div>
-      <div class="phase-name">
-        <div class="phase-dot" id="phase-dot"></div>
-        <span id="phase-name-text">Idle</span>
-      </div>
+    <div class="demo-footer">
+      <button class="demo-btn primary" onclick="fireToggle()">⟳ Fire W Toggle</button>
+      <button class="demo-btn" onclick="resetProto()">Reset</button>
     </div>
   </div>
 
-  <!-- ── RIGHT: spec ── -->
+  <!-- ── RIGHT: tabbed spec ── -->
   <div class="spec-col">
 
-    <!-- Overview -->
-    <div class="spec-section">
-      <div class="spec-section-title">Overview</div>
-      <div class="callout">
-        <strong>What this is:</strong> A 4-phase chart transition animation that plays when the user toggles between W (wealth-adjusted) and full portfolio views. The loading state is communicated through a white glow strobe; settlement through a gold sweep + shape morph directly into the final SVG line.
-      </div>
-      <div class="overview-grid">
-        <div class="overview-card">
-          <div class="ov-label">Total duration</div>
-          <div class="ov-value">≈ 1.9s</div>
-          <div class="ov-sub">Fade 380ms + pulse (variable) + settle 950ms</div>
-        </div>
-        <div class="overview-card">
-          <div class="ov-label">Rendering surface</div>
-          <div class="ov-value">Canvas</div>
-          <div class="ov-sub">Overlaid on SVG; SVG revealed at morph end</div>
-        </div>
-        <div class="overview-card">
-          <div class="ov-label">Sample points</div>
-          <div class="ov-value">N = 181</div>
-          <div class="ov-sub">Equally-spaced along arc length of each SVG path</div>
-        </div>
-        <div class="overview-card">
-          <div class="ov-label">Chart paths</div>
-          <div class="ov-value">2 paths</div>
-          <div class="ov-sub">line-w (bezier) · line-full (polyline)</div>
-        </div>
-      </div>
+    <!-- Tab strip -->
+    <div class="spec-tabs">
+      <button class="spec-tab active" data-tab="chart">Chart</button>
+      <button class="spec-tab" data-tab="networth">Net Worth</button>
     </div>
 
-    <!-- Timeline -->
-    <div class="spec-section">
-      <div class="spec-section-title">Animation Timeline</div>
-      <div class="timeline">
-        <div class="tl-row">
-          <div class="tl-time">0 → 380ms</div>
-          <div class="tl-spine"><div class="tl-node"></div><div class="tl-line"></div></div>
-          <div class="tl-content">
-            <div class="tl-phase">Phase 1 — Fade <span class="tl-pill white">linear</span></div>
-            <div class="tl-desc">Line color transitions from gold <code style="color:#C7A865">rgba(199,168,101,1)</code> → white <code style="color:#aaa">rgba(255,255,255,0.9)</code>. Glow alpha 0 → 0.7, glow blur 0 → 14px. Shape stays locked to the current ("from") chart. Canvas owns the render.</div>
-          </div>
+    <!-- ══ TAB: Chart ══ -->
+    <div class="tab-panel active" id="tab-chart">
+
+      <div class="spec-section">
+        <div class="spec-section-title">Overview</div>
+        <div class="callout">
+          <strong>What this is:</strong> A 4-phase chart transition animation triggered by the W toggle. Loading state communicated through a white glow strobe; settlement through a gold sweep + point-by-point shape morph directly into the final SVG line. Zero crossfade — the canvas and SVG match exactly at handoff.
         </div>
-        <div class="tl-row">
-          <div class="tl-time">380ms → data</div>
-          <div class="tl-spine"><div class="tl-node idle"></div><div class="tl-line"></div></div>
-          <div class="tl-content">
-            <div class="tl-phase">Phase 2 — Loading Pulse <span class="tl-pill white">half-wave sine</span></div>
-            <div class="tl-desc">White line pulses with a strobe-style blink: only the positive half of a 6 rad/s sine wave is used (clamp negatives to 0). Glow blur 4–20px, line alpha 0.60–0.90. "Updating data…" text fades in at 1.5s. Duration is unbounded — ends the moment data arrives.</div>
-          </div>
+        <div class="overview-grid">
+          <div class="overview-card"><div class="ov-label">Total duration</div><div class="ov-value">≈ 1.9s</div><div class="ov-sub">380ms fade + variable pulse + 950ms settle</div></div>
+          <div class="overview-card"><div class="ov-label">Rendering surface</div><div class="ov-value">Canvas</div><div class="ov-sub">Overlaid on SVG; SVG revealed at morph end</div></div>
+          <div class="overview-card"><div class="ov-label">Sample points</div><div class="ov-value">N = 181</div><div class="ov-sub">Equidistant along arc length of each path</div></div>
+          <div class="overview-card"><div class="ov-label">Chart paths</div><div class="ov-value">2 paths</div><div class="ov-sub">line-w (13 bezier) · line-full (50-pt polyline)</div></div>
         </div>
-        <div class="tl-row">
-          <div class="tl-time">0 → 380ms <span class="tl-pill">after data</span></div>
-          <div class="tl-spine"><div class="tl-node"></div><div class="tl-line"></div></div>
-          <div class="tl-content">
-            <div class="tl-phase">Phase 3A — Gold Sweep <span class="tl-pill">linear</span></div>
-            <div class="tl-desc">A gold frontier sweeps left → right across the <em>current shape</em> (no morphing yet). Behind the frontier: gold line. Ahead: white line. A bright white dot (radius 2.5px, glow 28px) marks the frontier. Duration: SETTLE × 0.4 = <strong>380ms</strong>.</div>
+      </div>
+
+      <div class="spec-section">
+        <div class="spec-section-title">Animation Timeline</div>
+        <div class="timeline">
+          <div class="tl-row">
+            <div class="tl-time">0 → 380ms</div>
+            <div class="tl-spine"><div class="tl-node"></div><div class="tl-line"></div></div>
+            <div class="tl-content">
+              <div class="tl-phase">Phase 1 — Fade <span class="tl-pill white">linear</span></div>
+              <div class="tl-desc">Line color fades gold → white. Glow alpha 0 → 0.7, blur 0 → 14px. Shape locked to the current chart. Canvas takes over SVG immediately.</div>
+            </div>
           </div>
-        </div>
-        <div class="tl-row">
-          <div class="tl-time">380 → 950ms <span class="tl-pill">after data</span></div>
-          <div class="tl-spine"><div class="tl-node"></div><div class="tl-line"></div></div>
-          <div class="tl-content">
-            <div class="tl-phase">Phase 3B — Shape Morph <span class="tl-pill gold">cubic ease-out</span></div>
-            <div class="tl-desc">The line shape morphs point-by-point from the old chart to the new chart. All-gold throughout. 181 sample points lerped: <code style="color:#C7A865">p = easeOutCubic(t)</code> where <code style="color:#C7A865">p ∈ [0,1]</code>. Duration: SETTLE × 0.6 = <strong>570ms</strong>.</div>
+          <div class="tl-row">
+            <div class="tl-time">380ms → data</div>
+            <div class="tl-spine"><div class="tl-node idle"></div><div class="tl-line"></div></div>
+            <div class="tl-content">
+              <div class="tl-phase">Phase 2 — Loading Pulse <span class="tl-pill white">half-wave sine</span></div>
+              <div class="tl-desc">White line strobes using half-wave sine (6 rad/s, clamp negatives to 0). Blur 4–20px, alpha 0.60–0.90. "Updating data…" text fades in at 1500ms. Runs until data arrives.</div>
+            </div>
           </div>
-        </div>
-        <div class="tl-row">
-          <div class="tl-time">at t=1.0</div>
-          <div class="tl-spine"><div class="tl-node"></div></div>
-          <div class="tl-content">
-            <div class="tl-phase">Handoff — same frame</div>
-            <div class="tl-desc">When morphP reaches 1.0, in the same execution frame: reveal SVG line (already at exact destination), <code>clearRect</code> canvas, hide skeleton. Then fade fill area opacity 0 → 1 over 200ms. No crossfade — the swap is imperceptible because canvas + SVG match exactly.</div>
+          <div class="tl-row">
+            <div class="tl-time">+0 → 380ms</div>
+            <div class="tl-spine"><div class="tl-node"></div><div class="tl-line"></div></div>
+            <div class="tl-content">
+              <div class="tl-phase">Phase 3A — Gold Sweep <span class="tl-pill">linear</span></div>
+              <div class="tl-desc">Gold frontier sweeps left→right on the <em>current shape</em>. Behind: gold. Ahead: white. Bright dot (r=2.5, blur=28) at frontier. No shape change yet. 380ms.</div>
+            </div>
+          </div>
+          <div class="tl-row">
+            <div class="tl-time">+380 → 950ms</div>
+            <div class="tl-spine"><div class="tl-node"></div><div class="tl-line"></div></div>
+            <div class="tl-content">
+              <div class="tl-phase">Phase 3B — Shape Morph <span class="tl-pill gold">cubic ease-out</span></div>
+              <div class="tl-desc">181 points lerped from old → new chart shape, all gold. <code style="color:#C7A865">p = 1−(1−t)³</code>. 570ms.</div>
+            </div>
+          </div>
+          <div class="tl-row">
+            <div class="tl-time">at p = 1.0</div>
+            <div class="tl-spine"><div class="tl-node"></div></div>
+            <div class="tl-content">
+              <div class="tl-phase">Handoff — same frame</div>
+              <div class="tl-desc">Reveal SVG, clearRect canvas, hide skeleton. Fill fades in over 200ms. No crossfade.</div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Timing tokens -->
-    <div class="spec-section">
-      <div class="spec-section-title">Timing Tokens</div>
-      <div class="prop-table">
-        <div class="prop-row"><div class="prop-key">FADE</div><div class="prop-val">380ms</div></div>
-        <div class="prop-row"><div class="prop-key">SETTLE</div><div class="prop-val">950ms</div></div>
-        <div class="prop-row"><div class="prop-key">SWEEP_DUR</div><div class="prop-val">SETTLE × 0.4 = 380ms</div></div>
-        <div class="prop-row"><div class="prop-key">MORPH_DUR</div><div class="prop-val">SETTLE × 0.6 = 570ms</div></div>
-        <div class="prop-row"><div class="prop-key">FILL_FADE</div><div class="prop-val">200ms</div></div>
-        <div class="prop-row"><div class="prop-key">DATA_TEXT_DELAY</div><div class="prop-val">1500ms from toggle (text fade-in over 350ms)</div></div>
-        <div class="prop-row"><div class="prop-key">Pulse frequency</div><div class="prop-val">6 rad/s ≈ 0.95 Hz</div></div>
+      <div class="spec-section">
+        <div class="spec-section-title">Timing Tokens</div>
+        <div class="prop-table">
+          <div class="prop-row"><div class="prop-key">FADE</div><div class="prop-val">380ms</div></div>
+          <div class="prop-row"><div class="prop-key">SETTLE</div><div class="prop-val">950ms</div></div>
+          <div class="prop-row"><div class="prop-key">SWEEP_DUR</div><div class="prop-val">SETTLE × 0.4 = 380ms · linear</div></div>
+          <div class="prop-row"><div class="prop-key">MORPH_DUR</div><div class="prop-val">SETTLE × 0.6 = 570ms · ease-out cubic</div></div>
+          <div class="prop-row"><div class="prop-key">FILL_FADE</div><div class="prop-val">200ms ease</div></div>
+          <div class="prop-row"><div class="prop-key">Pulse frequency</div><div class="prop-val">6 rad/s ≈ 0.95 Hz</div></div>
+          <div class="prop-row"><div class="prop-key">Data text delay</div><div class="prop-val">1500ms · fade-in 350ms</div></div>
+        </div>
       </div>
-    </div>
 
-    <!-- Colors -->
-    <div class="spec-section">
-      <div class="spec-section-title">Color Tokens</div>
-      <div class="color-grid">
-        <div class="color-row">
-          <div class="color-swatch" style="background:#C7A865;"></div>
-          <div class="color-info">
-            <div class="color-name">Gold line</div>
-            <div class="color-hex">rgba(199, 168, 101, 0.92) · #C7A865</div>
-            <div class="color-use">Used during sweep and morph phases</div>
-          </div>
+      <div class="spec-section">
+        <div class="spec-section-title">Color Tokens</div>
+        <div class="color-grid">
+          <div class="color-row"><div class="color-swatch" style="background:#C7A865;"></div><div class="color-info"><div class="color-name">Gold line</div><div class="color-hex">rgba(199,168,101,0.92) · #C7A865</div><div class="color-use">Sweep and morph phases</div></div></div>
+          <div class="color-row"><div class="color-swatch" style="background:rgba(199,168,101,0.5);border-color:rgba(199,168,101,0.3);"></div><div class="color-info"><div class="color-name">Gold glow</div><div class="color-hex">rgba(199,168,101,0.50)</div><div class="color-use">shadowBlur 9px outer, 2.7px inner</div></div></div>
+          <div class="color-row"><div class="color-swatch" style="background:rgba(255,255,255,0.75);"></div><div class="color-info"><div class="color-name">White line (pulse)</div><div class="color-hex">rgba(255,255,255,0.60–0.90)</div><div class="color-use">Alpha modulated by half-wave blink</div></div></div>
+          <div class="color-row"><div class="color-swatch" style="background:#ffffff;"></div><div class="color-info"><div class="color-name">Frontier dot</div><div class="color-hex">#ffffff · r=2.5px · blur=28px</div><div class="color-use">Leading edge during sweep</div></div></div>
         </div>
-        <div class="color-row">
-          <div class="color-swatch" style="background:rgba(199,168,101,0.5);border-color:rgba(199,168,101,0.3);"></div>
-          <div class="color-info">
-            <div class="color-name">Gold glow</div>
-            <div class="color-hex">rgba(199, 168, 101, 0.50)</div>
-            <div class="color-use">Shadow blur 9px (outer), 2.7px (inner pass)</div>
-          </div>
+      </div>
+
+      <div class="spec-section">
+        <div class="spec-section-title">Line Style</div>
+        <div class="prop-table">
+          <div class="prop-row"><div class="prop-key">lineWidth</div><div class="prop-val gold">1px</div></div>
+          <div class="prop-row"><div class="prop-key">lineCap</div><div class="prop-val gold">'round'</div></div>
+          <div class="prop-row"><div class="prop-key">lineJoin</div><div class="prop-val gold">'round'</div></div>
+          <div class="prop-row"><div class="prop-key">Glow passes</div><div class="prop-val">2 — same path stroked twice</div></div>
+          <div class="prop-row"><div class="prop-key">Pass 1 blur</div><div class="prop-val">full blur (9 gold / 20 white peak)</div></div>
+          <div class="prop-row"><div class="prop-key">Pass 2 blur</div><div class="prop-val">blur × 0.3 (tight inner core)</div></div>
         </div>
-        <div class="color-row">
-          <div class="color-swatch" style="background:rgba(255,255,255,0.75);"></div>
-          <div class="color-info">
-            <div class="color-name">White line (pulse)</div>
-            <div class="color-hex">rgba(255, 255, 255, 0.60–0.90)</div>
-            <div class="color-use">Alpha modulated by half-wave sine blink</div>
+      </div>
+
+      <div class="spec-section">
+        <div class="spec-section-title">Easing Functions</div>
+        <div class="easing-grid">
+          <div class="easing-card">
+            <div class="easing-name">Morph ease</div>
+            <div class="easing-formula">1 − (1 − t)³</div>
+            <svg width="100%" height="56" viewBox="0 0 100 56"><polyline points="0,54 10,41 20,30 30,21 40,13 50,8 60,5 70,3 80,2 90,1 100,0" stroke="#C7A865" stroke-width="1.5" fill="none" stroke-linecap="round"/><line x1="0" y1="56" x2="100" y2="56" stroke="rgba(255,255,255,0.05)" stroke-width="1"/></svg>
+            <div class="easing-use">Shape morph Phase 3B</div>
+            <div class="easing-rn">Easing.out(Easing.cubic)</div>
           </div>
-        </div>
-        <div class="color-row">
-          <div class="color-swatch" style="background:rgba(255,255,255,0.55);"></div>
-          <div class="color-info">
-            <div class="color-name">White glow (pulse)</div>
-            <div class="color-hex">rgba(255, 255, 255, 0.55–1.00)</div>
-            <div class="color-use">Blur 4–20px modulated by blink</div>
-          </div>
-        </div>
-        <div class="color-row">
-          <div class="color-swatch" style="background:#ffffff;"></div>
-          <div class="color-info">
-            <div class="color-name">Frontier dot</div>
-            <div class="color-hex">#ffffff · radius 2.5px</div>
-            <div class="color-use">Leading edge of gold sweep, glow blur 28px</div>
-          </div>
-        </div>
-        <div class="color-row">
-          <div class="color-swatch" style="background:rgba(255,255,255,0.88);"></div>
-          <div class="color-info">
-            <div class="color-name">White segment (sweep)</div>
-            <div class="color-hex">rgba(255, 255, 255, 0.88)</div>
-            <div class="color-use">The "ahead of frontier" section during sweep</div>
-          </div>
-        </div>
-        <div class="color-row">
-          <div class="color-swatch" style="background:rgba(152,158,160,0.75);"></div>
-          <div class="color-info">
-            <div class="color-name">Loading text</div>
-            <div class="color-hex">rgba(152, 158, 160, 0.75)</div>
-            <div class="color-use">"Updating data…" — 12sp, centered, fades in at 1.5s</div>
+          <div class="easing-card">
+            <div class="easing-name">Pulse blink</div>
+            <div class="easing-formula">max(0, sin(t × 6))</div>
+            <svg width="100%" height="56" viewBox="0 0 100 56"><polyline points="0,56 5,39 10,20 15,7 20,2 25,7 30,20 35,39 40,56 45,56 50,56 55,39 60,20 65,7 70,2 75,7 80,20 85,39 90,56 95,56 100,56" stroke="#7A8287" stroke-width="1.5" fill="none" stroke-linecap="round"/><line x1="0" y1="56" x2="100" y2="56" stroke="rgba(255,255,255,0.05)" stroke-width="1"/></svg>
+            <div class="easing-use">Phase 2 loading strobe</div>
+            <div class="easing-rn">Math.max(0, Math.sin(t * 6))</div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Line style -->
-    <div class="spec-section">
-      <div class="spec-section-title">Line Style (Canvas)</div>
-      <div class="prop-table">
-        <div class="prop-row"><div class="prop-key">lineWidth</div><div class="prop-val gold">1px</div></div>
-        <div class="prop-row"><div class="prop-key">lineCap</div><div class="prop-val gold">'round'</div></div>
-        <div class="prop-row"><div class="prop-key">lineJoin</div><div class="prop-val gold">'round'</div></div>
-        <div class="prop-row"><div class="prop-key">Glow passes</div><div class="prop-val">2 (outer + inner). Same path stroked twice.</div></div>
-        <div class="prop-row"><div class="prop-key">Pass 1 shadowBlur</div><div class="prop-val">full blur (e.g. 9 for gold)</div></div>
-        <div class="prop-row"><div class="prop-key">Pass 2 shadowBlur</div><div class="prop-val">blur × 0.3 (tight inner core)</div></div>
-        <div class="prop-row"><div class="prop-key">SVG match</div><div class="prop-val note">stroke-width="1" stroke-linecap="round" — canvas intentionally mirrors these for seamless handoff</div></div>
-      </div>
-    </div>
-
-    <!-- Easing -->
-    <div class="spec-section">
-      <div class="spec-section-title">Easing Functions</div>
-      <div class="easing-grid">
-        <div class="easing-card">
-          <div class="easing-name">Morph ease</div>
-          <div class="easing-formula">1 − (1 − t)³</div>
-          <svg width="100%" height="60" viewBox="0 0 100 60">
-            <polyline points="0,58 10,44 20,32 30,22 40,14 50,9 60,5 70,3 80,2 90,1 100,0"
-              stroke="#C7A865" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-            <line x1="0" y1="60" x2="100" y2="60" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
-            <line x1="0" y1="0" x2="0" y2="60" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
-          </svg>
-          <div class="easing-use">Shape morph (Phase 3B)</div>
-          <div class="easing-rn">Easing.out(Easing.cubic)</div>
-        </div>
-        <div class="easing-card">
-          <div class="easing-name">Half-wave blink</div>
-          <div class="easing-formula">max(0, sin(t × 6))</div>
-          <svg width="100%" height="60" viewBox="0 0 100 60">
-            <polyline points="0,60 5,42 10,22 15,8 20,2 25,8 30,22 35,42 40,60 45,60 50,60 55,42 60,22 65,8 70,2 75,8 80,22 85,42 90,60 95,60 100,60"
-              stroke="#7A8287" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-            <line x1="0" y1="60" x2="100" y2="60" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
-          </svg>
-          <div class="easing-use">Pulse phase — strobe blink feel</div>
-          <div class="easing-rn">Math.max(0, Math.sin(t * 6))</div>
-        </div>
-        <div class="easing-card">
-          <div class="easing-name">Sweep</div>
-          <div class="easing-formula">linear t ∈ [0,1]</div>
-          <svg width="100%" height="60" viewBox="0 0 100 60">
-            <line x1="0" y1="60" x2="100" y2="0" stroke="#C7A865" stroke-width="1.5"/>
-            <line x1="0" y1="60" x2="100" y2="60" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
-          </svg>
-          <div class="easing-use">Gold sweep (Phase 3A) — constant speed</div>
-          <div class="easing-rn">Easing.linear (or no easing)</div>
-        </div>
-        <div class="easing-card">
-          <div class="easing-name">Fade-in</div>
-          <div class="easing-formula">linear t ∈ [0,1]</div>
-          <svg width="100%" height="60" viewBox="0 0 100 60">
-            <line x1="0" y1="60" x2="100" y2="0" stroke="#7A8287" stroke-width="1.5"/>
-            <line x1="0" y1="60" x2="100" y2="60" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
-          </svg>
-          <div class="easing-use">Phase 1 color fade (gold → white)</div>
-          <div class="easing-rn">Easing.linear</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Chart paths -->
-    <div class="spec-section">
-      <div class="spec-section-title">Chart Paths</div>
-      <div class="prop-table">
-        <div class="prop-row">
-          <div class="prop-key">line-w (W chart)</div>
-          <div class="prop-val note">13 cubic bezier segments (C commands). Smooth, gradual slope. Sampled to 181 equidistant points by arc length.</div>
-        </div>
-        <div class="prop-row">
-          <div class="prop-key">line-full (full chart)</div>
-          <div class="prop-val note">~50 straight-line segments (M + L commands). Higher detail, more volatile shape. Sampled to 181 equidistant points by arc length.</div>
-        </div>
-        <div class="prop-row">
-          <div class="prop-key">Sampling method</div>
-          <div class="prop-val note">SVGPathElement.getTotalLength() + getPointAtLength(i/N × totalLen) for i in 0..N. N=180 gives 181 points.</div>
-        </div>
-        <div class="prop-row">
-          <div class="prop-key">Morph interpolation</div>
-          <div class="prop-val note">Linear lerp between corresponding sampled points: x = from.x + (to.x − from.x) × p, same for y.</div>
-        </div>
-        <div class="prop-row">
-          <div class="prop-key">ViewBox</div>
-          <div class="prop-val">x: -0.5 → 360.5 · y: 0 → 141</div>
-        </div>
-        <div class="prop-row">
-          <div class="prop-key">Rendered size</div>
-          <div class="prop-val">360 × 141px (canvas coordinate space)</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Glow system -->
-    <div class="spec-section">
-      <div class="spec-section-title">Glow System (Two-Pass)</div>
-      <div class="rn-note">
-        <strong>How it works:</strong> Every line stroke is drawn twice using the same path. The first pass sets a large <code>shadowBlur</code> for the diffuse glow halo. The second pass reuses the same beginPath() and sets <code>shadowBlur × 0.3</code> for a tight inner core glow. This creates a layered appearance: soft outer halo + bright inner line.
-      </div>
-      <div class="prop-table" style="margin-top:8px;">
-        <div class="prop-row"><div class="prop-key">Gold outer blur</div><div class="prop-val">9px · rgba(199,168,101,0.50)</div></div>
-        <div class="prop-row"><div class="prop-key">Gold inner blur</div><div class="prop-val">2.7px · rgba(199,168,101,0.50)</div></div>
-        <div class="prop-row"><div class="prop-key">White outer blur (peak)</div><div class="prop-val">20px · rgba(255,255,255,1.0)</div></div>
-        <div class="prop-row"><div class="prop-key">White inner blur (peak)</div><div class="prop-val">6px · rgba(255,255,255,1.0)</div></div>
-        <div class="prop-row"><div class="prop-key">Sweep white (ahead)</div><div class="prop-val">outer 8px · inner 2.4px</div></div>
-        <div class="prop-row"><div class="prop-key">Frontier dot blur</div><div class="prop-val">28px · rgba(255,255,255,1.0)</div></div>
-      </div>
-    </div>
-
-    <!-- React Native implementation -->
-    <div class="spec-section">
-      <div class="spec-section-title">React Native Implementation</div>
-
-      <div class="rn-note">
-        <strong>Recommended stack:</strong> <code>@shopify/react-native-skia</code> for canvas equivalent (Path, Paint, BlurMaskFilter, Canvas) + <code>react-native-reanimated</code> for animation values. Skia runs on the UI thread — no JS bridge overhead during animation frames.
-      </div>
-
-      <div style="display:flex;flex-direction:column;gap:10px;">
-        <div style="font-size:12px;font-weight:600;color:#F2F5F7;">RN Skia: Glow (two-pass equivalent)</div>
-        <div class="code-block"><pre><span class="c-cmt">// Two-pass glow in Skia — equivalent to canvas shadowBlur</span>
-<span class="c-kw">const</span> <span class="c-fn">drawGlowLine</span> = (canvas, path, color, glowColor, outerBlur, innerBlur) => {
-  <span class="c-cmt">// Pass 1: outer diffuse glow</span>
-  <span class="c-kw">const</span> glowPaint = Skia.<span class="c-fn">Paint</span>();
-  glowPaint.<span class="c-fn">setColor</span>(Skia.<span class="c-fn">Color</span>(color));
-  glowPaint.<span class="c-fn">setStrokeWidth</span>(<span class="c-num">1</span>);
-  glowPaint.<span class="c-fn">setStyle</span>(PaintStyle.Stroke);
-  glowPaint.<span class="c-fn">setStrokeCap</span>(StrokeCap.Round);
-  glowPaint.<span class="c-fn">setStrokeJoin</span>(StrokeJoin.Round);
-  glowPaint.<span class="c-fn">setMaskFilter</span>(
-    Skia.MaskFilter.<span class="c-fn">MakeBlur</span>(BlurStyle.Normal, outerBlur / <span class="c-num">2</span>, <span class="c-type">true</span>)
-  );
-  canvas.<span class="c-fn">drawPath</span>(path, glowPaint);
-
-  <span class="c-cmt">// Pass 2: tight inner core</span>
-  <span class="c-kw">const</span> corePaint = Skia.<span class="c-fn">Paint</span>();
-  corePaint.<span class="c-fn">setColor</span>(Skia.<span class="c-fn">Color</span>(color));
-  corePaint.<span class="c-fn">setStrokeWidth</span>(<span class="c-num">1</span>);
-  corePaint.<span class="c-fn">setStyle</span>(PaintStyle.Stroke);
-  corePaint.<span class="c-fn">setStrokeCap</span>(StrokeCap.Round);
-  corePaint.<span class="c-fn">setStrokeJoin</span>(StrokeJoin.Round);
-  corePaint.<span class="c-fn">setMaskFilter</span>(
-    Skia.MaskFilter.<span class="c-fn">MakeBlur</span>(BlurStyle.Normal, innerBlur / <span class="c-num">2</span>, <span class="c-type">true</span>)
-  );
-  canvas.<span class="c-fn">drawPath</span>(path, corePaint);
-};</pre></div>
-      </div>
-
-      <div style="display:flex;flex-direction:column;gap:10px;">
-        <div style="font-size:12px;font-weight:600;color:#F2F5F7;">Path sampling (pre-compute at mount, not per-frame)</div>
-        <div class="code-block"><pre><span class="c-cmt">// Sample N+1 equidistant points from an SVG path string</span>
-<span class="c-cmt">// In RN Skia, use Skia.Path.MakeFromSVGString() + getLength() + getPositionAtLength()</span>
-<span class="c-kw">const</span> <span class="c-fn">samplePath</span> = (svgPathString, N = <span class="c-num">180</span>) => {
-  <span class="c-kw">const</span> path = Skia.Path.<span class="c-fn">MakeFromSVGString</span>(svgPathString);
-  <span class="c-kw">const</span> total = path.<span class="c-fn">getLength</span>();
-  <span class="c-kw">return</span> Array.<span class="c-fn">from</span>({ length: N + <span class="c-num">1</span> }, (_, i) => {
-    <span class="c-kw">const</span> pos = path.<span class="c-fn">getPositionAtLength</span>((i / N) * total);
-    <span class="c-kw">return</span> { x: pos.x, y: pos.y };
-  });
+      <div class="spec-section">
+        <div class="spec-section-title">React Native (Skia)</div>
+        <div class="rn-note"><strong>Stack:</strong> <code>@shopify/react-native-skia</code> for canvas equivalent + <code>react-native-reanimated</code> for animation values. Pre-sample both paths once at mount in a <code>useRef</code>.</div>
+        <div class="code-block"><pre><span class="c-cmt">// Sample path points once at mount</span>
+<span class="c-kw">const</span> <span class="c-fn">samplePath</span> = (svgD, N = <span class="c-num">180</span>) => {
+  <span class="c-kw">const</span> path = Skia.Path.<span class="c-fn">MakeFromSVGString</span>(svgD);
+  <span class="c-kw">const</span> len  = path.<span class="c-fn">getLength</span>();
+  <span class="c-kw">return</span> Array.<span class="c-fn">from</span>({length: N+<span class="c-num">1</span>}, (_,i) =>
+    path.<span class="c-fn">getPositionAtLength</span>((i/N)*len));
 };
 
-<span class="c-cmt">// Pre-compute once, store in useRef (not useState — no re-render needed)</span>
-<span class="c-kw">const</span> ptsRef = <span class="c-fn">useRef</span>({
-  full: <span class="c-fn">samplePath</span>(FULL_PATH_D),
-  w:    <span class="c-fn">samplePath</span>(W_PATH_D),
-});</pre></div>
-      </div>
-
-      <div style="display:flex;flex-direction:column;gap:10px;">
-        <div style="font-size:12px;font-weight:600;color:#F2F5F7;">Shape morph (point lerp in worklet)</div>
-        <div class="code-block"><pre><span class="c-cmt">// morphP is a Reanimated shared value (0 → 1)</span>
+<span class="c-cmt">// Morph — runs on UI thread via useDerivedValue</span>
 <span class="c-kw">const</span> morphP = <span class="c-fn">useSharedValue</span>(<span class="c-num">0</span>);
-
-<span class="c-cmt">// Trigger morph</span>
 morphP.value = <span class="c-fn">withTiming</span>(<span class="c-num">1</span>, {
-  duration: <span class="c-num">570</span>,  <span class="c-cmt">// MORPH_DUR</span>
+  duration: <span class="c-num">570</span>,
   easing: Easing.<span class="c-fn">out</span>(Easing.cubic),
 });
 
-<span class="c-cmt">// In useDerivedValue / Canvas draw callback (runs on UI thread)</span>
 <span class="c-kw">const</span> morphedPath = <span class="c-fn">useDerivedValue</span>(() => {
   <span class="c-kw">const</span> p = morphP.value;
-  <span class="c-kw">const</span> from = ptsRef.current.full;  <span class="c-cmt">// or .w depending on direction</span>
-  <span class="c-kw">const</span> to   = ptsRef.current.w;
   <span class="c-kw">const</span> skPath = Skia.Path.<span class="c-fn">Make</span>();
-  from.<span class="c-fn">forEach</span>((fp, i) => {
-    <span class="c-kw">const</span> tp = to[i];
-    <span class="c-kw">const</span> x = fp.x + (tp.x - fp.x) * p;
-    <span class="c-kw">const</span> y = fp.y + (tp.y - fp.y) * p;
-    i === <span class="c-num">0</span> ? skPath.<span class="c-fn">moveTo</span>(x, y) : skPath.<span class="c-fn">lineTo</span>(x, y);
+  fromPts.<span class="c-fn">forEach</span>((fp, i) => {
+    <span class="c-kw">const</span> x = fp.x + (toPts[i].x - fp.x) * p;
+    <span class="c-kw">const</span> y = fp.y + (toPts[i].y - fp.y) * p;
+    i === <span class="c-num">0</span> ? skPath.<span class="c-fn">moveTo</span>(x,y) : skPath.<span class="c-fn">lineTo</span>(x,y);
   });
   <span class="c-kw">return</span> skPath;
 });</pre></div>
+        <div class="rn-note"><strong>Glow (two-pass):</strong> Draw the path twice — first with <code>MaskFilter.MakeBlur(Normal, blur/2)</code>, then again with <code>blur*0.3/2</code> for the inner core.</div>
+        <div class="rn-note"><strong>Scale:</strong> Paths are in 360×141 space. Apply <code>canvas.scale(screenWidth/360, screenWidth/360)</code> — no need to re-sample.</div>
       </div>
 
-      <div style="display:flex;flex-direction:column;gap:10px;">
-        <div style="font-size:12px;font-weight:600;color:#F2F5F7;">Half-wave sine blink (pulse phase)</div>
-        <div class="code-block"><pre><span class="c-cmt">// In a worklet (useDerivedValue or useAnimatedStyle)</span>
-<span class="c-kw">const</span> <span class="c-fn">getPulse</span> = (timestamp) => {
-  <span class="c-kw">const</span> raw   = Math.<span class="c-fn">sin</span>(timestamp / <span class="c-num">1000</span> * <span class="c-num">6</span>);
-  <span class="c-kw">const</span> blink = raw > <span class="c-num">0</span> ? raw : <span class="c-num">0</span>;   <span class="c-cmt">// half-wave: 0 during negative half</span>
-  <span class="c-kw">return</span> {
-    glowBlur: <span class="c-num">4</span> + <span class="c-num">16</span> * blink,          <span class="c-cmt">// 4 → 20</span>
-    lineAlpha: <span class="c-num">0.60</span> + <span class="c-num">0.30</span> * blink,    <span class="c-cmt">// 0.60 → 0.90</span>
-    glowAlpha: <span class="c-num">0.55</span> + <span class="c-num">0.45</span> * blink,    <span class="c-cmt">// 0.55 → 1.00</span>
-  };
+      <div class="spec-section">
+        <div class="spec-section-title">Quick Reference</div>
+        <div class="chips">
+          <span class="chip gold">lineWidth 1px</span><span class="chip gold">lineCap round</span>
+          <span class="chip gold">lineJoin round</span><span class="chip">N=181 pts</span>
+          <span class="chip">FADE 380ms</span><span class="chip gold">SWEEP 380ms</span>
+          <span class="chip gold">MORPH 570ms easeOutCubic</span><span class="chip">FILL 200ms</span>
+          <span class="chip">blink 6 rad/s half-sine</span><span class="chip gold">#C7A865 gold</span>
+          <span class="chip">2-pass glow</span><span class="chip blue">RN Skia</span><span class="chip blue">Reanimated</span>
+        </div>
+      </div>
+
+    </div><!-- /tab-chart -->
+
+    <!-- ══ TAB: Net Worth ══ -->
+    <div class="tab-panel" id="tab-networth">
+
+      <div class="spec-section">
+        <div class="spec-section-title">Overview</div>
+        <div class="callout">
+          <strong>What this is:</strong> When the W toggle fires, four numeric values animate simultaneously using <code>easeOutCubic</code> counters. Net worth and the day-change subline start immediately; asset cards are staggered by 60ms each. All values count from the current displayed number to the new state value.
+        </div>
+        <div class="overview-grid">
+          <div class="overview-card"><div class="ov-label">Trigger</div><div class="ov-value">W toggle</div><div class="ov-sub">Fires on toggle on OR off</div></div>
+          <div class="overview-card"><div class="ov-label">Elements animated</div><div class="ov-value">5 values</div><div class="ov-sub">Net worth · sub-line · 3 asset cards</div></div>
+          <div class="overview-card"><div class="ov-label">Net worth duration</div><div class="ov-value">750ms</div><div class="ov-sub">easeOutCubic · starts immediately</div></div>
+          <div class="overview-card"><div class="ov-label">Cards duration</div><div class="ov-value">600ms each</div><div class="ov-sub">60ms stagger between cards</div></div>
+        </div>
+      </div>
+
+      <div class="spec-section">
+        <div class="spec-section-title">Values &amp; States</div>
+        <div class="prop-table">
+          <div class="prop-row" style="background:rgba(199,168,101,0.04);"><div class="prop-key" style="color:#C7A865;font-weight:600;">W OFF (full portfolio)</div><div class="prop-val" style="color:#C7A865;font-weight:600;">W ON (wealth adjusted)</div></div>
+          <div class="prop-row"><div class="prop-key">Net worth</div><div class="prop-val">₹37.53 Cr → ₹13.61 Cr</div></div>
+          <div class="prop-row"><div class="prop-key">1D change</div><div class="prop-val">+₹13.82L → +₹3.28L</div></div>
+          <div class="prop-row"><div class="prop-key">Mutual Funds card</div><div class="prop-val">₹35.42L → ₹21.07L</div></div>
+          <div class="prop-row"><div class="prop-key">AIF card</div><div class="prop-val">₹2.45 Cr → ₹1.92 Cr</div></div>
+          <div class="prop-row"><div class="prop-key">PMS card</div><div class="prop-val">₹51.29L → ₹38.47L</div></div>
+        </div>
+        <div class="rn-note"><strong>Internal units:</strong> All values stored as integers in ₹0.01Cr units. e.g. NW_OFF=3753 means ₹37.53Cr. Format on output: <code>₹{(v/100).toFixed(2)} Cr</code></div>
+      </div>
+
+      <div class="spec-section">
+        <div class="spec-section-title">Animation Timeline</div>
+        <div class="timeline">
+          <div class="tl-row">
+            <div class="tl-time">0ms</div>
+            <div class="tl-spine"><div class="tl-node"></div><div class="tl-line"></div></div>
+            <div class="tl-content">
+              <div class="tl-phase">Net Worth <span class="tl-pill gold">750ms · ease-out cubic</span></div>
+              <div class="tl-desc">animateNetWorth fires immediately. Counts from old value to new using rAF loop. Format: <code>₹X.XX Cr</code>. Uses easeOutCubic for the fast-in slow-out feel.</div>
+            </div>
+          </div>
+          <div class="tl-row">
+            <div class="tl-time">0ms</div>
+            <div class="tl-spine"><div class="tl-node"></div><div class="tl-line"></div></div>
+            <div class="tl-content">
+              <div class="tl-phase">1D Sub-line <span class="tl-pill gold">650ms · ease-out cubic</span></div>
+              <div class="tl-desc">animateSubLine fires simultaneously with net worth. Counts ₹X.XXL value. At 680ms, innerHTML is rebuilt to restore the <code>&lt;span&gt;1D&lt;/span&gt;</code> badge which was lost during counter animation.</div>
+            </div>
+          </div>
+          <div class="tl-row">
+            <div class="tl-time">+0ms</div>
+            <div class="tl-spine"><div class="tl-node"></div><div class="tl-line"></div></div>
+            <div class="tl-content">
+              <div class="tl-phase">Card 1 (Mutual Funds) <span class="tl-pill gold">600ms</span></div>
+              <div class="tl-desc">Starts at delay + 0ms. Counts card amount value.</div>
+            </div>
+          </div>
+          <div class="tl-row">
+            <div class="tl-time">+60ms</div>
+            <div class="tl-spine"><div class="tl-node"></div><div class="tl-line"></div></div>
+            <div class="tl-content">
+              <div class="tl-phase">Card 2 (AIF) <span class="tl-pill gold">600ms</span></div>
+              <div class="tl-desc">Staggered 60ms after Card 1.</div>
+            </div>
+          </div>
+          <div class="tl-row">
+            <div class="tl-time">+120ms</div>
+            <div class="tl-spine"><div class="tl-node"></div></div>
+            <div class="tl-content">
+              <div class="tl-phase">Card 3 (PMS) <span class="tl-pill gold">600ms</span></div>
+              <div class="tl-desc">Staggered 60ms after Card 2. All three cards cascade visually.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="spec-section">
+        <div class="spec-section-title">Stagger Visualization</div>
+        <div class="stagger-vis">
+          <div class="stagger-row">
+            <div class="stagger-label">Net worth</div>
+            <div class="stagger-bar-wrap" style="width:100%;">
+              <div class="stagger-bar" style="left:0%;width:65%;opacity:0.9;"></div>
+            </div>
+            <div class="stagger-time">750ms</div>
+          </div>
+          <div class="stagger-row">
+            <div class="stagger-label">1D sub-line</div>
+            <div class="stagger-bar-wrap">
+              <div class="stagger-bar" style="left:0%;width:56%;opacity:0.7;"></div>
+            </div>
+            <div class="stagger-time">650ms</div>
+          </div>
+          <div class="stagger-row">
+            <div class="stagger-label">Card 1 (MF)</div>
+            <div class="stagger-bar-wrap">
+              <div class="stagger-bar" style="left:0%;width:52%;opacity:0.85;"></div>
+            </div>
+            <div class="stagger-time">+0ms 600ms</div>
+          </div>
+          <div class="stagger-row">
+            <div class="stagger-label">Card 2 (AIF)</div>
+            <div class="stagger-bar-wrap">
+              <div class="stagger-bar" style="left:5%;width:52%;opacity:0.7;"></div>
+            </div>
+            <div class="stagger-time">+60ms 600ms</div>
+          </div>
+          <div class="stagger-row">
+            <div class="stagger-label">Card 3 (PMS)</div>
+            <div class="stagger-bar-wrap">
+              <div class="stagger-bar" style="left:10%;width:52%;opacity:0.55;"></div>
+            </div>
+            <div class="stagger-time">+120ms 600ms</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="spec-section">
+        <div class="spec-section-title">Number Format</div>
+        <div class="prop-table">
+          <div class="prop-row"><div class="prop-key">Net worth</div><div class="prop-val gold">₹{(v/100).toFixed(2)} Cr</div></div>
+          <div class="prop-row"><div class="prop-key">1D sub-line</div><div class="prop-val gold">{sign}₹{abs}L &lt;span&gt;1D&lt;/span&gt;</div></div>
+          <div class="prop-row"><div class="prop-key">MF card</div><div class="prop-val gold">₹{(v/100).toFixed(2)}L</div></div>
+          <div class="prop-row"><div class="prop-key">AIF card</div><div class="prop-val gold">₹{(v/100).toFixed(2)}Cr</div></div>
+          <div class="prop-row"><div class="prop-key">PMS card</div><div class="prop-val gold">₹{(v/100).toFixed(2)}L</div></div>
+          <div class="prop-row"><div class="prop-key">Easing (all)</div><div class="prop-val note">easeOutCubic = 1 − (1 − t)³ — fast start, decelerates into the final number</div></div>
+          <div class="prop-row"><div class="prop-key">1D span restore</div><div class="prop-val note">innerHTML rebuilt at 680ms to restore the "1D" badge lost during textContent animation</div></div>
+        </div>
+      </div>
+
+      <div class="spec-section">
+        <div class="spec-section-title">React Native Implementation</div>
+        <div class="rn-note"><strong>Recommended:</strong> Use <code>react-native-reanimated</code>'s <code>useSharedValue</code> + <code>withTiming</code> for the numeric value, then derive the formatted string in a <code>useDerivedValue</code>. Display via Reanimated's <code>AnimatedText</code> or update via <code>useAnimatedProps</code> on a <code>Text</code> component.</div>
+        <div class="code-block"><pre><span class="c-cmt">// Net worth counter — 750ms easeOutCubic</span>
+<span class="c-kw">const</span> nwValue = <span class="c-fn">useSharedValue</span>(NW_OFF);  <span class="c-cmt">// 3753 = ₹37.53Cr</span>
+
+<span class="c-kw">const</span> <span class="c-fn">triggerToggle</span> = (toOn) => {
+  nwValue.value = <span class="c-fn">withTiming</span>(toOn ? NW_ON : NW_OFF, {
+    duration: <span class="c-num">750</span>,
+    easing: Easing.<span class="c-fn">out</span>(Easing.cubic),
+  });
 };
 
-<span class="c-cmt">// Use Skia's useClockValue() for the timestamp</span>
-<span class="c-kw">const</span> clock = <span class="c-fn">useClockValue</span>();
-<span class="c-kw">const</span> pulseValues = <span class="c-fn">useDerivedValue</span>(() => <span class="c-fn">getPulse</span>(clock.value));</pre></div>
+<span class="c-cmt">// Derived formatted string</span>
+<span class="c-kw">const</span> nwText = <span class="c-fn">useDerivedValue</span>(() =>
+  <span class="c-str">'₹'</span> + (nwValue.value / <span class="c-num">100</span>).<span class="c-fn">toFixed</span>(<span class="c-num">2</span>) + <span class="c-str">' Cr'</span>
+);
+
+<span class="c-cmt">// Staggered cards — delay each by 60ms</span>
+CARDS.<span class="c-fn">forEach</span>((card, i) => {
+  card.value.value = <span class="c-fn">withDelay</span>(
+    i * <span class="c-num">60</span>,
+    <span class="c-fn">withTiming</span>(toOn ? card.onVal : card.offVal, {
+      duration: <span class="c-num">600</span>,
+      easing: Easing.<span class="c-fn">out</span>(Easing.cubic),
+    })
+  );
+});</pre></div>
+        <div class="rn-note"><strong>"1D" badge:</strong> The sub-line format is <code>+₹X.XXL 1D</code> where "1D" is a smaller styled span. During animation, only the numeric portion updates. At animation end (680ms), restore the full styled text.</div>
       </div>
 
-      <div style="display:flex;flex-direction:column;gap:10px;">
-        <div style="font-size:12px;font-weight:600;color:#F2F5F7;">Sweep (Phase 3A)</div>
-        <div class="code-block"><pre><span class="c-cmt">// sweepP: shared value 0 → 1 over 380ms (linear)</span>
-<span class="c-kw">const</span> sweepP = <span class="c-fn">useSharedValue</span>(<span class="c-num">0</span>);
-sweepP.value = <span class="c-fn">withTiming</span>(<span class="c-num">1</span>, { duration: <span class="c-num">380</span>, easing: Easing.linear });
-
-<span class="c-cmt">// In draw worklet: split pts array at sweepIdx</span>
-<span class="c-kw">const</span> sweepIdx = Math.<span class="c-fn">round</span>(sweepP.value * N);
-<span class="c-kw">const</span> goldPts  = fromPts.<span class="c-fn">slice</span>(<span class="c-num">0</span>, sweepIdx + <span class="c-num">1</span>);  <span class="c-cmt">// behind: gold</span>
-<span class="c-kw">const</span> whitePts = fromPts.<span class="c-fn">slice</span>(sweepIdx);         <span class="c-cmt">// ahead: white</span>
-
-<span class="c-cmt">// Frontier dot at fromPts[sweepIdx]</span>
-<span class="c-kw">const</span> dot = fromPts[sweepIdx];
-<span class="c-cmt">// Draw circle at (dot.x, dot.y), radius 2.5, color #fff, blur 28px</span></pre></div>
+      <div class="spec-section">
+        <div class="spec-section-title">Quick Reference</div>
+        <div class="chips">
+          <span class="chip gold">Net worth 750ms</span><span class="chip gold">Sub-line 650ms</span>
+          <span class="chip gold">Cards 600ms</span><span class="chip">60ms stagger</span>
+          <span class="chip">easeOutCubic all</span><span class="chip">1D span restore @ 680ms</span>
+          <span class="chip blue">withTiming</span><span class="chip blue">withDelay</span><span class="chip blue">useDerivedValue</span>
+        </div>
       </div>
 
-      <div class="rn-note" style="margin-top:4px;">
-        <strong>Path viewBox scaling:</strong> The paths are designed for a 360×141 coordinate space. In RN, scale the canvas proportionally to the device width: <code>const scale = screenWidth / 360</code>. Apply via <code>canvas.scale(scale, scale)</code> or a Skia <code>Group</code> transform. Do not re-sample the paths — just scale the canvas.
-      </div>
-      <div class="rn-note">
-        <strong>Handoff:</strong> When morphP reaches 1.0, hide the Canvas component and show the static SVG (<code>react-native-svg</code>) in the same render cycle. Since the canvas drew the exact final position just before, there's no visible jump. Fade in the fill area with a 200ms <code>withTiming</code> on opacity.
-      </div>
-      <div class="rn-note">
-        <strong>Pre-compute points:</strong> Sample both paths in a <code>useEffect</code> on mount (not during animation). Store in a <code>useRef</code> so they don't trigger re-renders. 181 points = negligible cost, ~5ms.
-      </div>
-    </div>
+    </div><!-- /tab-networth -->
 
-    <!-- Final summary chips -->
-    <div class="spec-section">
-      <div class="spec-section-title">Quick Reference</div>
-      <div class="chips">
-        <span class="chip gold">lineWidth: 1px</span>
-        <span class="chip gold">lineCap: round</span>
-        <span class="chip gold">lineJoin: round</span>
-        <span class="chip">N = 181 points</span>
-        <span class="chip">FADE 380ms linear</span>
-        <span class="chip gold">SWEEP 380ms linear</span>
-        <span class="chip gold">MORPH 570ms easeOutCubic</span>
-        <span class="chip">FILL 200ms ease</span>
-        <span class="chip">blink: 6 rad/s half-sine</span>
-        <span class="chip gold">Gold #C7A865</span>
-        <span class="chip">2-pass glow</span>
-        <span class="chip blue">RN Skia</span>
-        <span class="chip blue">Reanimated</span>
-      </div>
-    </div>
-
-  </div>
-</div>
+  </div><!-- /spec-col -->
+</div><!-- /main -->
 
 <script>
-(function () {
-  const N = 180;
-  let ptsW = [], ptsFull = [];
-  let wIsOn = false;
-  let animRaf = null;
-  let animDone = true;
-  let phaseTimer = null;
+/* ── iframe init ── */
+const frame = document.getElementById('proto-frame');
 
-  const canvas = document.getElementById('demo-canvas');
-  const ctx = canvas.getContext('2d');
-  const CW = 360, CH = 141;
-  const pillTrack = document.getElementById('pill-track');
-  const phaseBar = document.getElementById('phase-bar');
-  const phaseNameEl = document.getElementById('phase-name-text');
-  const phaseDot = document.getElementById('phase-dot');
-  const toggleSubText = document.getElementById('toggle-sub-text');
-  const liveSvg = document.getElementById('demo-live-svg');
-  const demoLine = document.getElementById('demo-line-target');
+window.fireToggle = function () {
+  try { frame.contentWindow.simFire(); } catch(e) {}
+};
 
-  const W_PATH = 'M-0.5 118 C12 115,22 111,38 107 C50 104,57 113,68 115 C79 117,86 109,98 103 C110 97,118 95,130 98 C141 101,148 107,160 104 C170 101,175 93,186 89 C197 85,205 82,216 85 C226 88,230 82,240 75 C250 68,254 70,265 67 C275 64,280 57,292 52 C301 48,307 53,317 47 C327 41,334 50,342 47 C349 44,355 39,360.5 36';
+window.resetProto = function () {
+  frame.src = 'wealth-dashboard.html?iter=9&nosim=1';
+};
 
-  const FULL_BRIEF = [
-    [-0.5,139.8],[9.1,125.4],[10.1,122.1],[10.1,99.4],[15,95.1],[17,87.7],[21.1,85],
-    [25.3,81.6],[26.7,63.6],[26.7,59.6],[30.5,58.7],[34.3,66.4],[38.3,68.9],[42.3,71.3],
-    [47.5,73],[50.9,70.5],[54.8,71.1],[58.5,71.8],[61,71.7],[64.4,70.2],[68.5,54.6],
-    [71,50.7],[75.6,50.5],[77.2,52.6],[80.5,59],[81,59.7],[85.5,58.6],[86,57.1],
-    [90.4,51.1],[92.4,49.9],[93.2,49.7],[95.4,50.8],[98.7,50.6],[100.9,49.8],[103.1,49.8],
-    [106.7,48.4],[113.4,51.3],[114.1,53.2],[118.1,59.1],[120,60.1],[122.2,61.5],[122.7,62.5],
-    [130,62.8],[132,59.3],[136.9,50.4],[140.8,49.1],[142.2,51],[144.2,59.3],[145.9,65.9],
-    [145.9,69.2],[147.6,75.3],[149.6,77.6],[155.7,79.7],[161,78.5],[163,79.3],[166.2,79.3],
-    [166.3,79.2],[169.8,77.7],[172.1,76.7],[174,75.1],[180.4,74.7],[183.8,75.5],[186.9,75.1],
-    [190,75.6],[193.5,77.2],[197.3,78.3],[199.2,79],[203.1,81.6],[205.8,82.5],[210.3,83],
-    [212.6,82.8],[218.1,81.1],[223.1,78.8],[225.5,76.8],[227.1,74.4],[227.9,73.4],[232.7,69],
-    [234.7,67.9],[237.5,67.9],[242.6,66.7],[243.9,65.8],[248,64.5],[249.8,64.6],[252.6,64.1],
-    [254.8,63.1],[260.2,64.1],[268.4,61.9],[270.5,54.7],[276.3,38.8],[278.2,23],[278.6,21.3],
-    [281.8,13.6],[283.6,11.2],[286.9,8.6],[287.8,8.1],[293.4,9.4],[294.8,11.3],[298,13.4],
-    [300.1,14],[302.9,17.1],[308.1,20.1],[311.3,18.9],[314,17.9],[316.3,17.8],[320.5,16.3],
-    [323.6,11.9],[324.3,11.2],[325,10.8],[327,10.9],[329.8,9.9],[330.9,3.5],[333.8,2.8],
-    [334.5,3.7],[336.6,2.6],[336.8,2.2],[337.4,1.4],[339,1.3],[339.9,1.6],[341.7,1.6],
-    [344.4,0.7],[345.9,0.5],[350.3,3.2],[352.6,7.8],[355.1,9.8],[355.4,9.9],[356.9,9.8],
-    [359.7,10.5],[360.5,11.3]
-  ];
-
-  function samplePolylinePts(rawPts, N) {
-    const pts = rawPts.map(([x,y]) => ({x,y}));
-    const segs = [];
-    let total = 0;
-    for (let i = 1; i < pts.length; i++) {
-      const dx = pts[i].x - pts[i-1].x, dy = pts[i].y - pts[i-1].y;
-      const d = Math.sqrt(dx*dx+dy*dy);
-      segs.push(d); total += d;
-    }
-    const result = [];
-    for (let i = 0; i <= N; i++) {
-      const target = (i / N) * total;
-      let acc = 0, si = 0;
-      while (si < segs.length - 1 && acc + segs[si] < target) { acc += segs[si++]; }
-      const t2 = segs[si] > 0 ? (target - acc) / segs[si] : 0;
-      result.push({
-        x: pts[si].x + (pts[si+1].x - pts[si].x) * t2,
-        y: pts[si].y + (pts[si+1].y - pts[si].y) * t2,
-      });
-    }
-    return result;
-  }
-
-  /* Sample W path using hidden SVG element */
-  function init() {
-    const dpW = document.getElementById('dp-w');
-    const dpFull = document.getElementById('dp-full');
-    if (!dpW || !dpFull) return;
-    const lenW = dpW.getTotalLength();
-    for (let i = 0; i <= N; i++) {
-      const pt = dpW.getPointAtLength((i / N) * lenW);
-      ptsW.push({x: pt.x, y: pt.y});
-    }
-    ptsFull = samplePolylinePts(FULL_BRIEF, N);
-
-    /* Set initial SVG line to show full chart */
-    demoLine.setAttribute('d', dpFull.getAttribute('d'));
-    liveSvg.style.opacity = '1';
-    canvas.style.opacity = '0';
-  }
-
-  function clamp01(v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
-  function eOut(t)    { return 1 - Math.pow(1 - t, 3); }
-
-  function setPhase(name, pct, dotOn) {
-    phaseBar.style.width = pct + '%';
-    phaseNameEl.textContent = name;
-    phaseDot.className = 'phase-dot' + (dotOn ? ' active' : '');
-  }
-
-  function strokeLine(pts, color, glowColor, blur) {
-    if (pts.length < 2) return;
-    ctx.save();
-    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-    ctx.shadowColor = glowColor; ctx.shadowBlur = blur;
-    ctx.beginPath();
-    pts.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
-    ctx.strokeStyle = color; ctx.lineWidth = 1;
-    ctx.stroke();
-    ctx.shadowBlur = blur * 0.3;
-    ctx.stroke();
-    ctx.restore();
-  }
-
-  function runAnim(toOn) {
-    if (animRaf) cancelAnimationFrame(animRaf);
-    animDone = false;
-
-    const fromPts = toOn ? ptsFull : ptsW;
-    const toPts   = toOn ? ptsW    : ptsFull;
-
-    liveSvg.style.opacity = '0';
-    canvas.style.opacity = '1';
-
-    const FADE = 380, SETTLE = 950;
-    const SWEEP_DUR = SETTLE * 0.4, MORPH_DUR = SETTLE * 0.6;
-    const t0 = performance.now();
-
-    /* Simulated data arrival after 800ms from toggle */
-    let dataReady = false;
-    setTimeout(() => { dataReady = true; }, 800);
-    let settleStarted = false, morphDone = false;
-    let settleT0 = 0;
-
-    (function loop(now) {
-      const el = now - t0;
-
-      if (el < FADE) {
-        /* Phase 1: gold → white */
-        const p = el / FADE;
-        const r = Math.round(199 + (255-199)*p), g2 = Math.round(168+(255-168)*p), b = Math.round(101+(255-101)*p);
-        ctx.clearRect(0,0,CW,CH);
-        strokeLine(fromPts, `rgba(${r},${g2},${b},0.9)`, `rgba(255,255,255,${0.7*p})`, 14*p);
-        setPhase('Phase 1 — Gold → White', (el/FADE)*15, false);
-      } else if (!dataReady) {
-        /* Phase 2: pulse blink */
-        const raw = Math.sin(now/1000*6), blink = raw > 0 ? raw : 0;
-        const pulse = 4+16*blink, alpha = 0.60+0.30*blink;
-        ctx.clearRect(0,0,CW,CH);
-        strokeLine(fromPts, `rgba(255,255,255,${alpha})`, `rgba(255,255,255,${0.55+0.45*blink})`, pulse);
-        setPhase('Phase 2 — Loading pulse', 20, true);
-      } else if (!settleStarted) {
-        settleStarted = true;
-        settleT0 = now;
-      }
-
-      if (settleStarted && !morphDone) {
-        const se = now - settleT0;
-        if (se < SWEEP_DUR) {
-          /* Phase 3A: sweep */
-          const sweepP = se / SWEEP_DUR;
-          const sweepIdx = Math.round(clamp01(sweepP) * N);
-          ctx.clearRect(0,0,CW,CH);
-          if (sweepIdx < N) strokeLine(fromPts.slice(sweepIdx), 'rgba(255,255,255,0.88)', 'rgba(255,255,255,0.55)', 8);
-          if (sweepIdx > 0) strokeLine(fromPts.slice(0, sweepIdx+1), 'rgba(199,168,101,0.92)', 'rgba(199,168,101,0.50)', 9);
-          if (sweepIdx > 0 && sweepIdx < N) {
-            const sp = fromPts[sweepIdx];
-            ctx.save(); ctx.shadowColor='rgba(255,255,255,1)'; ctx.shadowBlur=28;
-            ctx.beginPath(); ctx.arc(sp.x,sp.y,2.5,0,Math.PI*2); ctx.fillStyle='#fff'; ctx.fill(); ctx.restore();
-          }
-          const pct = 20 + (se/SWEEP_DUR)*35;
-          setPhase('Phase 3A — Gold sweep', pct, false);
-        } else {
-          /* Phase 3B: morph */
-          const mp = eOut(clamp01((se - SWEEP_DUR) / MORPH_DUR));
-          const morphPts = fromPts.map((fp,i) => { const tp=toPts[i]; return {x:fp.x+(tp.x-fp.x)*mp,y:fp.y+(tp.y-fp.y)*mp}; });
-          ctx.clearRect(0,0,CW,CH);
-          strokeLine(morphPts, 'rgba(199,168,101,0.92)', 'rgba(199,168,101,0.50)', 9);
-          const pct = 55 + mp * 40;
-          setPhase('Phase 3B — Shape morph', pct, false);
-          if (mp >= 1 && !morphDone) {
-            morphDone = true; animDone = true;
-            /* Handoff */
-            const dpFull = document.getElementById('dp-full');
-            const dpW = document.getElementById('dp-w');
-            demoLine.setAttribute('d', toOn ? dpW.getAttribute('d') : dpFull.getAttribute('d'));
-            liveSvg.style.opacity = '1';
-            ctx.clearRect(0,0,CW,CH);
-            canvas.style.opacity = '0';
-            setPhase('Done', 100, false);
-            return;
-          }
-        }
-      }
-
-      if (!animDone) animRaf = requestAnimationFrame(loop);
-    })(performance.now());
-  }
-
-  window.demoToggle = function () {
-    if (!animDone) return;
-    wIsOn = !wIsOn;
-    pillTrack.className = 'pill-track' + (wIsOn ? ' on' : '');
-    toggleSubText.textContent = wIsOn ? 'On · showing W chart' : 'Off · showing full chart';
-    runAnim(wIsOn);
-  };
-
-  window.demoReplay = function () {
-    if (!animDone) return;
-    const cur = wIsOn;
-    wIsOn = !cur;
-    pillTrack.className = 'pill-track' + (wIsOn ? ' on' : '');
-    toggleSubText.textContent = wIsOn ? 'On · showing W chart' : 'Off · showing full chart';
-    runAnim(wIsOn);
-  };
-
-  /* Init after DOM ready */
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
-})();
+/* ── Tabs ── */
+document.querySelectorAll('.spec-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.spec-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+  });
+});
 
 /* ── Accordion ── */
 document.querySelectorAll('.spec-section').forEach((section, i) => {

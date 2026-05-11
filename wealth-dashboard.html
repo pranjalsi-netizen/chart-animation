@@ -3080,6 +3080,21 @@ window.simFire = function () {
   };
 
 })();
+
+/* ── URL param boot: ?iter=9&nosim=1 ── */
+(function () {
+  const p = new URLSearchParams(location.search);
+  const iter = parseInt(p.get('iter'));
+  if (!isNaN(iter) && window.switchIter) window.switchIter(iter);
+  if (p.get('nosim') === '1') {
+    const panel = document.getElementById('sim-panel');
+    if (panel) panel.style.display = 'none';
+    const iterPanel = document.getElementById('iter-panel');
+    if (iterPanel) iterPanel.style.display = 'none';
+    const iterOverlay = document.getElementById('iter-overlay');
+    if (iterOverlay) iterOverlay.style.display = 'none';
+  }
+})();
 </script>
 
 </body>
