@@ -1,0 +1,3086 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=360px, initial-scale=1.0">
+  <title>W Managed — Wealth Dashboard</title>
+  <style>
+    @font-face {
+      font-family: 'Sohne';
+      src: url('/Users/pranjalsi/Downloads/OTF/Söhne-Kräftig.otf') format('opentype');
+      font-weight: 700; font-style: normal;
+    }
+    @font-face {
+      font-family: 'Sohne';
+      src: url('/Users/pranjalsi/Downloads/OTF/Söhne-KräftigKursiv.otf') format('opentype');
+      font-weight: 700; font-style: italic;
+    }
+    @font-face {
+      font-family: 'Sohne';
+      src: url('/Users/pranjalsi/Downloads/OTF/Söhne-Halbfett.otf') format('opentype');
+      font-weight: 600; font-style: normal;
+    }
+    @font-face {
+      font-family: 'Sohne';
+      src: url('/Users/pranjalsi/Downloads/OTF/Söhne-HalbfettKursiv.otf') format('opentype');
+      font-weight: 600; font-style: italic;
+    }
+
+    @font-face {
+      font-family: 'GrowwSans';
+      src: url('/Users/pranjalsi/Downloads/Groww Sans (1)/Variable/GrowwSans-Variable.ttf') format('truetype');
+      font-weight: 100 900; font-style: normal;
+    }
+    @font-face {
+      font-family: 'GrowwSans';
+      src: url('/Users/pranjalsi/Downloads/Groww Sans (1)/Variable/GrowwSans-VariableItalic.ttf') format('truetype');
+      font-weight: 100 900; font-style: italic;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      width: 100%; height: 100%;
+      background: #111214;
+    }
+
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-family: 'GrowwSans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+
+    /* ── Device shell ── */
+    .device-shell {
+      position: relative;
+      width: 396px;
+      height: 870px;
+      border-radius: 54px;
+      background: #1a1a1e;
+      box-shadow:
+        0 0 0 1.5px #3a3a3e,
+        0 0 0 3px #111214,
+        0 0 0 4.5px #2a2a2e,
+        0 40px 100px rgba(0,0,0,0.8),
+        inset 0 1px 0 rgba(255,255,255,0.08);
+      flex-shrink: 0;
+    }
+
+    /* Side buttons */
+    .device-shell::before {
+      content: '';
+      position: absolute;
+      left: -4px; top: 130px;
+      width: 4px; height: 36px;
+      background: #2e2e32;
+      border-radius: 2px 0 0 2px;
+      box-shadow: 0 50px 0 #2e2e32, 0 90px 0 #2e2e32;
+    }
+    .device-shell::after {
+      content: '';
+      position: absolute;
+      right: -4px; top: 160px;
+      width: 4px; height: 70px;
+      background: #2e2e32;
+      border-radius: 0 2px 2px 0;
+    }
+
+    /* Dynamic island */
+    .device-island {
+      position: absolute;
+      top: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120px; height: 34px;
+      background: #000;
+      border-radius: 20px;
+      z-index: 10;
+    }
+
+    /* Screen viewport */
+    .device-screen {
+      position: absolute;
+      top: 10px; left: 10px; right: 10px; bottom: 10px;
+      border-radius: 46px;
+      overflow: hidden;
+      background: #0c0c0c;
+    }
+
+    /* Scrollable app content — clip container for push navigation */
+    .app-content {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      position: relative;
+      color: #fff;
+    }
+
+    /* Individual screens — each one scrolls independently */
+    .screen {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      overflow-y: auto;
+      overflow-x: hidden;
+      will-change: transform;
+      transition: transform 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+      background: #0c0c0c;
+    }
+    .screen::-webkit-scrollbar { display: none; }
+
+    #screen-home { transform: translateX(0); z-index: 1; }
+    #screen-mf   { transform: translateX(100%); z-index: 2; overflow: hidden; display: flex; flex-direction: column; }
+    #screen-home.pushed { transform: translateX(-28%); }
+    #screen-mf.active   { transform: translateX(0); }
+
+    .tab-panels-wrap {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+      min-height: 0;
+    }
+
+    .tab-panel {
+      position: absolute;
+      inset: 0;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      transition: transform 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .tab-panel::-webkit-scrollbar { display: none; }
+
+    #panel-mf     { transform: translateX(0); }
+    #panel-stocks { transform: translateX(100%); }
+
+    /* ── Stocks & ETFs screen ── */
+    .stocks-scroll { flex: 1; overflow-y: auto; padding: 0 16px 32px; }
+    .stocks-summary-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px; padding: 16px;
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .stocks-card-label { font-size: 12px; color: rgba(255,255,255,0.45); margin-bottom: 6px; }
+    .stocks-card-amount { font-size: 28px; font-weight: 700; color: #F2F5F7; letter-spacing: -0.5px; }
+    .stocks-card-actions { display: flex; align-items: center; gap: 8px; }
+    .stocks-dots-btn {
+      width: 32px; height: 32px; border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.15); background: none;
+      display: flex; align-items: center; justify-content: center; cursor: pointer;
+    }
+    .stocks-comp-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px; padding: 16px; margin-bottom: 20px;
+    }
+    .stocks-comp-title {
+      font-size: 10px; font-weight: 600; letter-spacing: 0.08em;
+      color: rgba(255,255,255,0.35); margin-bottom: 14px;
+    }
+    .stocks-bar-wrap {
+      display: flex; height: 10px; border-radius: 5px; overflow: hidden;
+      margin-bottom: 16px; gap: 2px;
+    }
+    .stocks-comp-row {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 13px; color: rgba(255,255,255,0.65); margin-top: 10px;
+    }
+    .stocks-comp-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .stocks-comp-amount { margin-left: auto; font-weight: 600; color: #F2F5F7; }
+    .stocks-section-title { font-size: 16px; font-weight: 700; color: #F2F5F7; margin-bottom: 14px; }
+    .stocks-insight-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px; padding: 16px; margin-bottom: 12px; position: relative;
+    }
+    .stocks-insight-category {
+      font-size: 10px; font-weight: 600; letter-spacing: 0.08em;
+      color: rgba(255,255,255,0.35); margin-bottom: 10px;
+    }
+    .stocks-insight-row { display: flex; align-items: flex-start; gap: 12px; }
+    .stocks-insight-label { font-size: 19px; font-weight: 700; margin-bottom: 5px; }
+    .stocks-insight-desc { font-size: 12px; color: rgba(255,255,255,0.45); line-height: 1.45; max-width: 160px; }
+    .stocks-chevron-wrap {
+      position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
+      width: 28px; height: 28px; border-radius: 50%;
+      background: rgba(255,255,255,0.08); border: none;
+      display: flex; align-items: center; justify-content: center; cursor: pointer;
+    }
+
+    .screen::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 100%;
+      opacity: 0.5;
+      background: linear-gradient(180deg, rgba(47,47,47,0.80) 0%, rgba(41,41,41,0.00) 70%);
+      pointer-events: none; z-index: 0;
+    }
+    .screen > * { position: relative; z-index: 1; }
+
+    /* ── MF Detail styles ── */
+    .mf-back-btn {
+      width: 36px; height: 36px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+    }
+    .mf-tabs {
+      display: flex;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      margin: 4px 0 0;
+    }
+    .mf-tab {
+      padding: 12px 20px;
+      font-family: 'Sohne', sans-serif;
+      font-size: 15px; font-weight: 600;
+      color: rgba(255,255,255,0.35);
+      cursor: pointer; position: relative;
+      white-space: nowrap;
+      overflow: hidden;
+      max-width: 200px;
+      transition: max-width 0.4s cubic-bezier(0.4,0,0.2,1),
+                  padding   0.4s cubic-bezier(0.4,0,0.2,1),
+                  opacity   0.3s cubic-bezier(0.4,0,0.2,1);
+    }
+    .mf-tab.active { color: #7B72E9; }
+    .mf-tab.active::after {
+      content: '';
+      position: absolute; bottom: -1px; left: 0; right: 0;
+      height: 2px; border-radius: 2px 2px 0 0;
+      background: #7B72E9;
+    }
+    .mf-tab.tab-hidden {
+      max-width: 0;
+      padding-left: 0;
+      padding-right: 0;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .mf-summary-card {
+      display: flex;
+      width: 328px;
+      padding: 16px 0;
+      flex-direction: column;
+      align-items: flex-start;
+      border-radius: 20px;
+      border: 1px solid rgba(84, 95, 99, 0.2);
+      background: #151819;
+      backdrop-filter: blur(7.5px);
+      margin: 20px auto 0;
+    }
+    .mf-card-top {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      padding: 0 16px; width: 100%; box-sizing: border-box;
+    }
+    .mf-card-label {
+      font-family: 'GrowwSans', sans-serif;
+      font-size: 12px; color: rgba(255,255,255,0.45); margin-bottom: 6px;
+    }
+    .mf-card-amount {
+      font-family: 'Sohne', sans-serif;
+      font-size: 30px; font-weight: 600; color: #F2F5F7;
+      line-height: 1.15;
+    }
+    .mf-card-icons { display: flex; gap: 8px; align-items: flex-start; }
+    .mf-icon-btn {
+      width: 32px; height: 32px; border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: transparent;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+    }
+    .mf-divider {
+      border: none;
+      border-top: 1px dashed rgba(255,255,255,0.12);
+      margin: 16px 16px;
+      width: calc(100% - 32px);
+    }
+    .mf-metric {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 7px 16px;
+      width: 100%; box-sizing: border-box;
+    }
+    .mf-metric-label {
+      font-family: 'GrowwSans', sans-serif;
+      font-size: 13px; color: rgba(255,255,255,0.45);
+    }
+    .mf-metric-val {
+      font-family: 'GrowwSans', sans-serif;
+      font-size: 13px; font-weight: 500; color: #F2F5F7;
+    }
+    .mf-updated {
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      margin: 14px 16px;
+      font-family: 'GrowwSans', sans-serif;
+      font-size: 12px; color: rgba(255,255,255,0.4);
+    }
+    .mf-updated-dot {
+      width: 16px; height: 16px; border-radius: 50%;
+      border: 1.5px solid #04B488;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .mf-view-toggle {
+      display: flex;
+      background: #1A1C20;
+      border-radius: 99px;
+      padding: 4px;
+      margin: 0 16px 24px;
+    }
+    .view-btn {
+      flex: 1; padding: 8px 0;
+      border-radius: 99px;
+      font-family: 'GrowwSans', sans-serif;
+      font-size: 13px; font-weight: 500;
+      color: rgba(255,255,255,0.4);
+      background: transparent; border: none; cursor: pointer;
+    }
+    .view-btn.active {
+      background: #2A2D33;
+      color: #F2F5F7;
+    }
+    .holdings-hdr {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0 16px 12px;
+    }
+    .holdings-count {
+      font-family: 'Sohne', sans-serif;
+      font-size: 11px; font-weight: 600;
+      letter-spacing: 1.5px; color: rgba(255,255,255,0.5);
+    }
+    .holdings-sort {
+      font-family: 'GrowwSans', sans-serif;
+      font-size: 12px; color: rgba(255,255,255,0.45);
+      display: flex; align-items: center; gap: 4px; cursor: pointer;
+    }
+    .fund-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 16px;
+      border-bottom: 1px dashed rgba(255,255,255,0.09);
+      cursor: pointer;
+    }
+    .fund-item:last-child { border-bottom: none; }
+    .fund-logo {
+      width: 44px; height: 44px; border-radius: 12px;
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+    }
+    .fund-name {
+      flex: 1;
+      font-family: 'GrowwSans', sans-serif;
+      font-size: 14px; font-weight: 500; color: #F2F5F7;
+      line-height: 1.35;
+    }
+    .fund-amounts { text-align: right; flex-shrink: 0; }
+    .fund-current {
+      font-family: 'GrowwSans', sans-serif;
+      font-size: 14px; font-weight: 600;
+      line-height: 1.3;
+    }
+    .fund-current.gain { color: #04B488; }
+    .fund-current.loss { color: #FF8C42; }
+    .fund-invested {
+      font-family: 'GrowwSans', sans-serif;
+      font-size: 12px; color: rgba(255,255,255,0.4);
+      margin-top: 2px;
+    }
+    .mf-bottom-pad { height: 80px; }
+    /* ── Status Bar ── */
+    .status-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 22px 6px;
+      font-size: 15px;
+      font-weight: 600;
+    }
+    .status-icons { display: flex; align-items: center; gap: 5px; }
+
+    /* ── Top Header ── */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 16px 25px;
+      position: relative;
+    }
+    .hamburger { display: flex; flex-direction: column; gap: 5px; cursor: pointer; }
+    .hamburger span { display: block; height: 2px; background: #fff; border-radius: 2px; }
+    .hamburger span:nth-child(1) { width: 22px; }
+    .hamburger span:nth-child(2) { width: 16px; }
+    .hamburger span:nth-child(3) { width: 22px; }
+
+    .user-pill {
+      display: flex;
+      height: 32px;
+      padding: 8px 12px;
+      justify-content: center;
+      align-items: center;
+      gap: 6px;
+      border-radius: 99px;
+      border: 1px solid #252A2C;
+      background: #060809;
+      cursor: pointer;
+    }
+    .avatar {
+      width: 16px; height: 16px; border-radius: 50%;
+      background: linear-gradient(135deg, #7c6af7, #a855f7);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 8px; font-weight: 700;
+      overflow: hidden;
+    }
+    .avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .user-name { font-family: 'GrowwSans', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.8px; }
+    .chevron { opacity: 0.6; margin-left: 2px; }
+
+    .eye-btn {
+      width: 38px; height: 38px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+    }
+
+    /* ── Net Worth ── */
+    .net-worth { padding: 11px 16px 0; }
+    .nw-label {
+      font-family: 'Sohne', sans-serif;
+      font-size: 10px;
+      font-style: normal;
+      font-weight: 500;
+      line-height: 12px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #696E70;
+      text-align: center;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .info-circle {
+      width: 14px; height: 14px; border-radius: 50%;
+      border: 1px solid #666;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 9px; color: #888;
+    }
+    .nw-row {
+      display: flex; justify-content: space-between;
+      align-items: flex-start; margin-top: 6px;
+    }
+    .nw-amount {
+      font-family: 'Sohne', sans-serif;
+      font-size: 40px;
+      font-weight: 500;
+      line-height: 48px;
+      background: linear-gradient(116deg, #FFDD8D 0%, #685021 100%);
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .nw-sub {
+      font-family: 'GrowwSans', sans-serif;
+      font-size: 14px;
+      font-style: normal;
+      font-weight: 500;
+      line-height: 20px;
+      color: #04B488;
+      margin-top: 6px;
+    }
+    .nw-sub span { color: #666; margin-left: 6px; }
+
+    .heading-small {
+      color: #F2F5F7;
+      font-family: 'Sohne', sans-serif;
+      font-size: 16px;
+      font-weight: 500;
+      line-height: 24px;
+    }
+
+    .w-toggle {
+      display: flex;
+      height: 32px;
+      padding: 8px 12px;
+      justify-content: center;
+      align-items: center;
+      gap: 4px;
+      border-radius: 99px;
+      border: 1px solid #252A2C;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .w-letter {
+      font-family: 'Sohne', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      color: #666;
+    }
+    .w-toggle.on .w-letter {
+      background: linear-gradient(116deg, #FFDD8D 0%, #685021 100%);
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .toggle-track {
+      display: flex;
+      width: 20px;
+      height: 12px;
+      padding: 1px;
+      align-items: center;
+      justify-content: flex-start;
+      border-radius: 12px;
+      background: #1E2224;
+      transition: background 0.2s;
+    }
+    .w-toggle.on .toggle-track {
+      background: linear-gradient(110deg, #FFDD8D 0%, #685021 100%);
+      justify-content: flex-end;
+    }
+    .toggle-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #fff;
+      flex-shrink: 0;
+    }
+
+    /* ── Chart ── */
+    .chart-wrap {
+      width: 360px; height: 141px;
+      margin-top: 18px; position: relative; overflow: hidden;
+    }
+    .chart-wrap svg { width: 100%; height: 100%; display: block; }
+
+    /* ── Chart skeleton loader ── */
+    #chart-skeleton {
+      display: none;
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+    #chart-skel-canvas { width: 100%; height: 100%; display: block; }
+    #chart-skel-flat {
+      display: none;
+      position: absolute;
+      inset: 0;
+      border-radius: 0;
+      background: linear-gradient(90deg,
+        #141618 0%, #1E2224 35%,
+        rgba(199,168,101,0.20) 50%,
+        #1E2224 65%, #141618 100%);
+      background-size: 1080px 100%;
+      animation: s4shimmer 2s ease-in-out infinite;
+    }
+
+    /* ── Assets Section ── */
+    .assets { padding: 22px 0 0; }
+    .assets-hdr {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 16px;
+      padding: 0 16px;
+    }
+    .assets-title { font-family: 'Sohne', sans-serif; font-size: 16px; font-weight: 500; line-height: 24px; color: #F2F5F7; }
+    .gear-btn {
+      width: 38px; height: 38px; border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.18);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+    }
+
+    /* ── Cards ── */
+    .cards {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0 0 134px;
+    }
+
+    .card {
+      border-radius: 20px;
+      padding: 16px;
+      display: flex;
+      width: calc(100% - 32px);
+      height: 100px;
+      justify-content: space-between;
+      align-items: flex-start;
+      position: relative; overflow: hidden; cursor: pointer;
+      flex-shrink: 0;
+      margin-bottom: -24px;
+      transition: transform 0.42s cubic-bezier(0.4, 0, 0.2, 1),
+                  opacity  0.38s cubic-bezier(0.4, 0, 0.2, 1);
+      transform-origin: top center;
+      will-change: transform, opacity;
+    }
+    .card:last-child { margin-bottom: 0; }
+    .card.card-hidden {
+      transform: scale(0.78) translateY(-24px);
+      opacity: 0;
+      pointer-events: none;
+    }
+    .card-stocks  {
+      border: 1px solid rgba(77, 164, 221, 0.2);
+      background: linear-gradient(180deg, #254D67 0%, #060809 100%);
+      transition: transform 0.42s cubic-bezier(0.4, 0, 0.2, 1),
+                  opacity  0.38s cubic-bezier(0.4, 0, 0.2, 1),
+                  margin-bottom 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .card-stocks.card-hidden {
+      margin-bottom: -100px;
+    }
+    .card-mutual  {
+      border: 1px solid rgba(122, 122, 198, 0.2);
+      background: linear-gradient(180deg, #30304D 0%, #060809 100%);
+    }
+    .card-aif     {
+      border: 1px solid rgba(157, 97, 92, 0.2);
+      background: linear-gradient(180deg, #482F2E 0%, #060809 100%);
+    }
+    .card-pms     { border: 1px solid rgba(199, 168, 101, 0.2); background: linear-gradient(180deg, #5D4F32 0%, var(--background-backgroundPrimary, #060809) 100%); }
+    .card-unlisted{ border: 1px solid rgba(161, 181, 92, 0.2); background: linear-gradient(180deg, #4B542E 0%, var(--background-backgroundPrimary, #060809) 100%); }
+    /* z-index by DOM position — updates automatically on FLIP reorder */
+    .cards .card:nth-child(1) { z-index: 1; }
+    .cards .card:nth-child(2) { z-index: 2; }
+    .cards .card:nth-child(3) { z-index: 3; }
+    .cards .card:nth-child(4) { z-index: 4; }
+    .cards .card:nth-child(5) { z-index: 5; }
+
+    .card-left { display: flex; flex-direction: column; justify-content: space-between; height: 100%; }
+    .card-icon-row {
+      display: flex; align-items: center; gap: 7px;
+      font-size: 10.5px; font-weight: 700; letter-spacing: 1.5px;
+      color: rgba(255,255,255,0.6);
+    }
+    .card-icon-row svg { opacity: 0.75; flex-shrink: 0; }
+
+    .card-stocks .card-icon-row {
+      color: #4DA4DD;
+      font-family: 'Sohne', sans-serif;
+      font-size: 10px;
+      font-weight: 500;
+      line-height: 12px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .card-right { text-align: right; }
+    .card-amount { font-family: 'Sohne', sans-serif; font-size: 18px; font-style: normal; font-weight: 500; line-height: 28px; color: #F2F5F7; white-space: nowrap; }
+    .pos { font-family: 'GrowwSans', sans-serif; font-size: 12px; font-style: normal; font-weight: 500; line-height: 18px; color: #04B488; margin-top: 3px; white-space: nowrap; }
+    .neg { font-family: 'GrowwSans', sans-serif; font-size: 12px; font-style: normal; font-weight: 500; line-height: 18px; color: #f05050; margin-top: 3px; white-space: nowrap; }
+    .muted { font-family: 'GrowwSans', sans-serif; font-size: 12px; font-style: normal; font-weight: 500; line-height: 18px; color: rgba(255,255,255,0.4); margin-top: 3px; }
+
+    /* Decorative watermark bg shapes */
+    .card-bg {
+      position: absolute; bottom: -8px; left: 8px;
+      opacity: 1; pointer-events: none; width: 90px; height: auto;
+    }
+
+    /* ── Bottom Nav ── */
+    .bottom-nav {
+      position: sticky; bottom: 0;
+      width: 100%;
+      background: #111;
+      border-top: 1px solid rgba(255,255,255,0.07);
+      display: flex; justify-content: space-around;
+      padding: 12px 0 30px;
+      z-index: 100;
+    }
+    .nav-item {
+      display: flex; flex-direction: column; align-items: center; gap: 5px;
+      cursor: pointer; position: relative;
+    }
+    .nav-label { font-size: 10.5px; color: rgba(255,255,255,0.38); letter-spacing: 0.2px; }
+    .nav-item.active .nav-label { color: #c9a431; }
+    .badge {
+      position: absolute; top: -2px; right: -4px;
+      width: 8px; height: 8px; background: #ff3b30; border-radius: 50%;
+    }
+
+    /* ── Iterations Panel ── */
+    #iter-panel {
+      position: fixed;
+      left: 0; top: 0; bottom: 0;
+      width: 220px;
+      background: #0E1012;
+      border-right: 1px solid rgba(255,255,255,0.08);
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .iter-panel-hdr {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 20px 16px 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      flex-shrink: 0;
+    }
+    .iter-panel-title {
+      font-family: 'Sohne', sans-serif;
+      font-size: 14px; font-weight: 600; color: #F2F5F7;
+      letter-spacing: 0.3px;
+    }
+    .iter-list { flex: 1; overflow-y: auto; padding: 12px; scrollbar-width: none; }
+    .iter-list::-webkit-scrollbar { display: none; }
+
+    .iter-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px;
+      border-radius: 12px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: background 0.18s, border-color 0.18s;
+      margin-bottom: 6px;
+    }
+    .iter-item:hover { background: rgba(255,255,255,0.04); }
+    .iter-item.active {
+      background: rgba(199,168,101,0.08);
+      border-color: rgba(199,168,101,0.25);
+    }
+
+    .iter-badge {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: #1A1C20;
+      border: 1px solid rgba(255,255,255,0.1);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      font-family: 'Sohne', sans-serif;
+      font-size: 13px; font-weight: 600;
+      color: rgba(255,255,255,0.4);
+    }
+    .iter-item.active .iter-badge {
+      background: rgba(199,168,101,0.15);
+      border-color: rgba(199,168,101,0.3);
+      color: #C7A865;
+    }
+
+    .iter-info { flex: 1; min-width: 0; }
+    .iter-name {
+      font-family: 'GrowwSans', sans-serif;
+      font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.55);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .iter-item.active .iter-name { color: #F2F5F7; }
+    .iter-tag {
+      font-family: 'GrowwSans', sans-serif;
+      font-size: 10px; color: rgba(255,255,255,0.3);
+      margin-top: 2px;
+    }
+    .iter-item.active .iter-tag { color: #C7A865; }
+
+    #iter-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 998;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.32s ease;
+    }
+    #iter-overlay.open { opacity: 1; pointer-events: all; }
+
+    /* ── Iteration 2: Circular W button ── */
+    body.iter-2 .w-toggle {
+      width: 32px; height: 32px;
+      padding: 0;
+      border-radius: 50%;
+      border: 2.5px solid transparent;
+      background:
+        radial-gradient(circle at 38% 32%, #1e2124 0%, #0c0d0f 65%) content-box,
+        linear-gradient(145deg, #7a7a7a 0%, #2e2e2e 50%, #909090 100%) border-box;
+      flex-shrink: 0;
+      position: relative;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.6);
+    }
+    body.iter-2 .w-toggle.on {
+      background:
+        radial-gradient(circle at 38% 32%, #1a1c1e 0%, #0c0d0f 65%) content-box,
+        linear-gradient(145deg, #FFDD8D 0%, #8B6B2A 45%, #C7A865 100%) border-box;
+      box-shadow: 0 2px 16px rgba(199,168,101,0.3);
+    }
+    body.iter-2 .w-toggle .toggle-track { display: none; }
+    body.iter-2 .w-toggle .w-letter {
+      font-size: 14px; font-weight: 700;
+      color: #6a6a6a;
+      -webkit-text-fill-color: #6a6a6a;
+      background: none;
+    }
+    body.iter-2 .w-toggle.on .w-letter {
+      background: linear-gradient(145deg, #FFDD8D 0%, #685021 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* ── Iteration 3: Toggle relocated ── */
+    /* Hide nav toggles, show nav eye buttons */
+    .header-eye-nav  { display: none; }
+    .mf-eye-nav      { display: none; }
+    /* Hide relocated toggles by default */
+    .assets-hdr-toggle   { display: none; }
+    .mf-card-toggle-wrap { display: none; }
+
+    body.iter-3 .header .w-toggle          { display: none !important; }
+    body.iter-3 .mf-top-nav .w-toggle      { display: none !important; }
+    body.iter-3 .header-eye-nav            { display: flex; }
+    body.iter-3 .mf-eye-nav                { display: flex; }
+    body.iter-3 .assets-hdr-toggle         { display: flex; }
+    body.iter-3 .mf-card-toggle-wrap       { display: flex; }
+    body.iter-3 .mf-card-icons             { display: none; }
+
+    /* iter-3 nav eye icons — bare icon, no circle */
+    body.iter-3 .header-eye-nav,
+    body.iter-3 .mf-eye-nav {
+      width: auto; height: auto;
+      border: none !important;
+      background: none;
+      border-radius: 0;
+      padding: 4px;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+    /* Hide the nw-row eye button in iter-3 */
+    body.iter-3 .nw-row-eye { display: none !important; }
+    body.iter-3 .mf-card-toggle-wrap .toggle-track,
+    body.iter-3 .assets-hdr-toggle .toggle-track {
+      border-radius: 12px;
+      background: #1E2224;
+      display: flex;
+      width: 20px;
+      height: 12px;
+      padding: 1px;
+      justify-content: flex-start;
+      align-items: center;
+      gap: 5px;
+      transition: background 0.2s, justify-content 0s;
+    }
+    body.iter-3 .mf-card-toggle-wrap.on .toggle-track,
+    body.iter-3 .assets-hdr-toggle.on .toggle-track {
+      background: linear-gradient(110deg, #FFDD8D 0%, #685021 100%);
+      justify-content: flex-end;
+    }
+    body.iter-3 .mf-card-toggle-wrap .toggle-dot,
+    body.iter-3 .assets-hdr-toggle .toggle-dot {
+      width: 10px;
+      height: 10px;
+      position: static;
+      flex-shrink: 0;
+      transition: none;
+    }
+
+    /* Stocks disabled state — only meaningful in iter-3 */
+    body.iter-3 .card-stocks {
+      transition: opacity 0.42s ease, filter 0.42s ease;
+    }
+    body.iter-3 .card-stocks.card-disabled {
+      border: 1px solid #252A2C;
+      background: linear-gradient(180deg, #1E2224 0%, #060809 100%);
+      opacity: 0.7;
+      filter: none;
+      pointer-events: none;
+    }
+
+    /* ── Iteration 6 ── */
+    body.iter-5 .header .w-toggle      { display: none !important; }
+    body.iter-5 .mf-top-nav .w-toggle  { display: none !important; }
+    body.iter-5 .mf-card-toggle-wrap   { display: none; }
+    body.iter-5 .assets-hdr-toggle     { display: flex; }
+
+    body.iter-6 .header .w-toggle      { display: none !important; }
+    body.iter-6 .mf-top-nav .w-toggle  { display: none !important; }
+    body.iter-6 .mf-card-toggle-wrap   { display: none; }
+    body.iter-6 .assets-hdr-toggle     { display: flex; }
+
+    body.iter-7 .header .w-toggle      { display: none !important; }
+    body.iter-7 .mf-top-nav .w-toggle  { display: none !important; }
+    body.iter-7 .mf-card-toggle-wrap   { display: none; }
+    body.iter-7 .assets-hdr-toggle     { display: flex; }
+
+    /* ── Iteration 8: toggle beside All Assets + inside pages ── */
+    body.iter-8 .header .w-toggle      { display: none !important; }
+    body.iter-8 .mf-top-nav .w-toggle  { display: none !important; }
+    body.iter-8 .mf-card-toggle-wrap   { display: flex; }
+    body.iter-8 .mf-card-icons         { display: none; }
+    body.iter-8 .assets-hdr-toggle     { display: flex; }
+    body.iter-8 #panel-stocks .mf-card-toggle-wrap { display: flex; }
+    body.iter-8 #panel-stocks .mf-card-icons       { display: none; }
+
+    /* ── Iteration 9: toggle beside All Assets ── */
+    body.iter-9 .header .w-toggle      { display: none !important; }
+    body.iter-9 .mf-top-nav .w-toggle  { display: none !important; }
+    body.iter-9 .mf-card-toggle-wrap   { display: none; }
+    body.iter-9 .assets-hdr-toggle     { display: flex; }
+
+    /* ── Simulation panel (right side) ── */
+    #sim-panel {
+      position: fixed;
+      right: 0; top: 0; bottom: 0;
+      width: 180px;
+      background: #0E1012;
+      border-left: 1px solid rgba(255,255,255,0.08);
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .sim-hdr {
+      padding: 20px 16px 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      flex-shrink: 0;
+    }
+    .sim-title {
+      font-family: 'Sohne', sans-serif;
+      font-size: 14px; font-weight: 600; color: #F2F5F7;
+      letter-spacing: 0.3px;
+    }
+    .sim-subtitle {
+      font-size: 10px; color: #5A6268; margin-top: 3px; letter-spacing: 0.04em;
+    }
+    .sim-body { padding: 16px; display: flex; flex-direction: column; gap: 20px; }
+    .sim-section-label {
+      font-size: 10px; font-weight: 600; letter-spacing: 0.08em;
+      color: #5A6268; text-transform: uppercase; margin-bottom: 8px;
+    }
+    .sim-speed-btns { display: flex; flex-direction: column; gap: 6px; }
+    .sim-speed-btn {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 12px; border-radius: 10px;
+      border: 1px solid #252A2C; background: none;
+      font-size: 12px; font-weight: 500; color: #5A6268;
+      cursor: pointer; text-align: left;
+      transition: border-color 0.15s, color 0.15s, background 0.15s;
+    }
+    .sim-speed-btn.active {
+      border-color: #C7A865;
+      background: rgba(199,168,101,0.08);
+      color: #C7A865;
+    }
+    .sim-speed-time {
+      font-size: 10px; opacity: 0.6;
+    }
+    .sim-fire-btn {
+      width: 100%; padding: 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(199,168,101,0.4);
+      background: rgba(199,168,101,0.08);
+      color: #C7A865; font-size: 13px; font-weight: 600;
+      cursor: pointer; letter-spacing: 0.02em;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .sim-fire-btn:active {
+      background: rgba(199,168,101,0.18);
+    }
+    .sim-state {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 10px; border-radius: 8px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    .sim-state-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: #3A3F42; flex-shrink: 0;
+      transition: background 0.3s;
+    }
+    .sim-state-dot.on { background: #C7A865; }
+    .sim-state-text { font-size: 11px; color: #5A6268; }
+
+    /* ── Iteration 4: Skeleton Loader ── */
+    @keyframes s4shimmer {
+      0%   { background-position: -360px 0; }
+      100% { background-position: 720px 0; }
+    }
+    .s4-bar {
+      background: linear-gradient(90deg,
+        #141618 0%, #1E2224 30%,
+        rgba(199,168,101,0.22) 50%,
+        #1E2224 70%, #141618 100%);
+      background-size: 1080px 100%;
+      animation: s4shimmer 2s ease-in-out infinite;
+      border-radius: 8px;
+    }
+    #skel4 {
+      display: none;
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: #060809;
+      z-index: 50;
+      overflow: hidden;
+      flex-direction: column;
+    }
+    body.iter-4 #skel4 { display: flex; }
+    .s4-hdr {
+      display: flex; height: 52px;
+      align-items: center; justify-content: center;
+      padding: 0 16px; flex-shrink: 0;
+    }
+    .s4-pill { width: 100px; height: 18px; }
+    .s4-nw { padding: 24px 16px 0; flex-shrink: 0; }
+    .s4-lbl  { width: 130px; height: 10px; margin-bottom: 10px; }
+    .s4-amt  { width: 190px; height: 34px; margin-bottom: 8px; }
+    .s4-sub  { width: 110px; height: 12px; }
+    .s4-chart {
+      width: 360px; height: 141px;
+      margin-top: 18px; flex-shrink: 0; position: relative;
+    }
+    #skel4-canvas { width: 100%; height: 100%; display: block; }
+    .s4-assets { padding: 22px 16px 0; flex: 1; }
+    .s4-atitle { width: 120px; height: 14px; margin-bottom: 16px; }
+    .s4-cards  { display: flex; flex-direction: column; }
+    .s4-card {
+      height: 100px; border-radius: 20px;
+      margin-bottom: -24px; flex-shrink: 0;
+      background: linear-gradient(90deg,
+        #141618 0%, #1E2224 35%,
+        rgba(199,168,101,0.16) 50%,
+        #1E2224 65%, #141618 100%);
+      background-size: 1080px 100%;
+      animation: s4shimmer 2s ease-in-out infinite;
+    }
+    .s4-card:nth-child(1) { z-index:1; animation-delay:0s; }
+    .s4-card:nth-child(2) { z-index:2; animation-delay:0.12s; }
+    .s4-card:nth-child(3) { z-index:3; animation-delay:0.24s; }
+    .s4-card:nth-child(4) { z-index:4; animation-delay:0.36s; }
+    .s4-card:nth-child(5) { z-index:5; animation-delay:0.48s; margin-bottom:0; }
+  </style>
+</head>
+<body>
+
+<div class="device-shell">
+  <div class="device-island"></div>
+  <div class="device-screen">
+    <div class="app-content">
+<div id="screen-home" class="screen">
+<!-- Status Bar -->
+<div class="status-bar">
+  <span>10:00</span>
+  <div class="status-icons">
+    <!-- Signal -->
+    <svg width="17" height="13" viewBox="0 0 17 13" fill="white">
+      <rect x="0"  y="9"  width="3" height="4" rx="0.5"/>
+      <rect x="4"  y="6"  width="3" height="7" rx="0.5"/>
+      <rect x="8"  y="3"  width="3" height="10" rx="0.5"/>
+      <rect x="12" y="0"  width="3" height="13" rx="0.5"/>
+    </svg>
+    <!-- Wifi -->
+    <svg width="17" height="13" viewBox="0 0 24 18" fill="white">
+      <path d="M12 13.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3z"/>
+      <path d="M12 8.5c2.2 0 4.2.9 5.6 2.3l1.8-1.8A9.93 9.93 0 0012 6a9.93 9.93 0 00-7.4 3l1.8 1.8C7.8 9.4 9.8 8.5 12 8.5z"/>
+      <path d="M12 3C7.05 3 2.6 5.1 0 8.5l1.8 1.8C4.1 7.3 7.8 5.5 12 5.5s7.9 1.8 10.2 4.8L24 8.5C21.4 5.1 16.95 3 12 3z"/>
+    </svg>
+    <!-- Battery -->
+    <svg width="27" height="13" viewBox="0 0 27 13" fill="white">
+      <rect x="0"   y="1"   width="23" height="11" rx="2.5" stroke="white" stroke-width="1" fill="none"/>
+      <rect x="1.5" y="2.5" width="18" height="8"  rx="1.5"/>
+      <rect x="24"  y="4"   width="2.5" height="5" rx="1.2" opacity="0.5"/>
+    </svg>
+  </div>
+</div>
+
+<!-- Header -->
+<div class="header">
+  <div class="hamburger">
+    <img src="file:///Users/pranjalsi/Downloads/claude check/bottom nav icon/Menu.png" width="22" height="22" alt="Menu">
+  </div>
+
+  <div class="user-pill" style="position:absolute; left:50%; transform:translateX(-50%);">
+    <span class="user-name">NIKITHA K.</span>
+    <svg class="chevron" width="10" height="7" viewBox="0 0 10 7" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round">
+      <path d="M1 1l4 4 4-4"/>
+    </svg>
+  </div>
+
+  <!-- iter-1 / iter-2: pill toggle -->
+  <div class="w-toggle" onclick="toggleWManaged(this)">
+    <span class="w-letter">W</span>
+    <div class="toggle-track">
+      <div class="toggle-dot"></div>
+    </div>
+  </div>
+  <!-- iter-3: eye icon in nav -->
+  <div class="header-eye-nav eye-btn" style="width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,0.18);align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;">
+    <img src="file:///Users/pranjalsi/Downloads/claude check/bottom nav icon/Hide.png" width="22" height="22" alt="Hide">
+  </div>
+</div>
+
+<!-- Net Worth -->
+<div class="net-worth">
+  <div class="nw-label" id="nw-label">
+    TOTAL NET WORTH
+    <img src="file:///Users/pranjalsi/Downloads/claude check/bottom nav icon/Info icon.png" width="12" height="12" alt="info" style="vertical-align:middle;">
+  </div>
+  <div class="nw-row">
+    <div>
+      <div class="nw-amount">₹37.53 Cr</div>
+      <div class="nw-sub">+₹13.82L <span>1D</span></div>
+    </div>
+    <div class="nw-row-eye" style="width:40px; height:40px; border-radius:50%; border:1px solid rgba(255,255,255,0.18); display:flex; align-items:center; justify-content:center;">
+      <img src="file:///Users/pranjalsi/Downloads/claude check/bottom nav icon/Hide.png" width="18" height="18" alt="Hide">
+    </div>
+  </div>
+</div>
+
+<!-- Chart -->
+<div class="chart-wrap">
+  <div id="chart-skeleton">
+    <canvas id="chart-skel-canvas" width="360" height="141"></canvas>
+  </div>
+  <div id="chart-skel-flat"></div>
+  <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="360" height="141" viewBox="0 0 360 141" fill="none">
+    <defs>
+      <pattern id="pattern0_61473_127282" patternUnits="userSpaceOnUse" patternTransform="matrix(3.6 0 0 3.6 179.613 69.2)" preserveAspectRatio="none" viewBox="0 0 6 6" width="1" height="1">
+        <g id="pattern0_61473_127282_inner">
+          <circle cx="0.5" cy="0.5" r="0.5" fill="#C7A865"/>
+        </g>
+      </pattern>
+      <radialGradient id="dotFade" cx="65%" cy="35%" r="55%" gradientUnits="userSpaceOnUse" fx="65%" fy="35%">
+        <stop offset="0%" stop-color="white" stop-opacity="0.7"/>
+        <stop offset="60%" stop-color="white" stop-opacity="0.2"/>
+        <stop offset="100%" stop-color="black" stop-opacity="0"/>
+      </radialGradient>
+      <mask id="dotMask">
+        <rect width="360" height="141" fill="url(#dotFade)"/>
+      </mask>
+      <linearGradient id="paint0_linear_61473_127283" x1="361" y1="69.791" x2="1.00006" y2="69.791" gradientUnits="userSpaceOnUse">
+        <stop stop-color="#FFDD8D"/>
+        <stop offset="1" stop-color="#685021"/>
+      </linearGradient>
+    </defs>
+    <!-- Full portfolio chart (default) -->
+    <g id="chart-full">
+      <path id="fill-full" mask="url(#dotMask)" d="M10.0004 99.4481V120.51C10.0004 121.488 9.76096 122.452 9.30302 123.317L5.50011 130.5L-0.173828 139H360V9.5L357.988 9.09757C357.663 9.03266 357.334 8.998 357.003 8.99401C355.267 8.97311 353.648 8.11145 352.662 6.68259L351.5 5L350.086 2.17082C349.706 1.41083 349.09 0.794586 348.33 0.41459C347.784 0.141944 347.183 0 346.573 0H345.739C345.248 0 344.76 0.060164 344.284 0.179145L341.899 0.775263C341.307 0.92324 340.69 0.937931 340.092 0.818276L339.807 0.761405C338.967 0.593414 338.095 0.750172 337.366 1.20006L336.235 1.89828C335.517 2.3411 334.587 2.21501 334.013 1.59721C333.021 0.529173 331.236 1.0546 330.98 2.48962L330.035 7.80412C330.012 7.93453 329.979 8.06308 329.937 8.18875L329.714 8.8572C329.33 10.0107 328.042 10.5892 326.924 10.1102C326.079 9.74815 325.097 9.9839 324.509 10.6899L323 12.5L320.14 15.6784C319.115 16.8169 317.591 17.37 316.074 17.1534C315.368 17.0525 314.648 17.1174 313.971 17.343L312 18L308.132 18.967C305.801 19.5499 303.414 18.2394 302.654 15.9594C302.238 14.7131 301.31 13.7039 300.102 13.1864L296.585 11.6792C295.556 11.2381 294.696 10.4779 294.132 9.51065C292.678 7.01949 289.481 6.17803 286.99 7.63121L286.347 8.00641C285.786 8.33328 285.283 8.74935 284.856 9.23823L282.277 12.1957C281.764 12.7835 281.371 13.4657 281.119 14.204L277.993 23.3756C277.862 23.7614 277.77 24.1596 277.719 24.564L276.206 36.6192C276.156 37.0131 276.068 37.4011 275.942 37.7776L270.03 55.4272L268.545 60.6012C268.193 61.8271 267.411 62.8925 266.35 63.5999C265.473 64.1846 264.438 64.5 263.384 64.5C262.476 64.5 261.584 64.2687 260.791 63.8281L258.644 62.6354C257.894 62.2187 257.05 62 256.192 62C255.408 62 254.635 62.1825 253.934 62.533L253.267 62.8666C252.434 63.2831 251.515 63.5 250.584 63.5H249.5H248.423C247.173 63.5 245.953 63.8907 244.936 64.6176L243.843 65.3979C243.285 65.7963 242.663 66.0963 242.004 66.2846L240.308 66.7691C239.772 66.9223 239.218 67 238.66 67H236.917C235.985 67 235.067 67.2169 234.233 67.6334L233.227 68.1367C232.745 68.3778 232.297 68.6828 231.896 69.0435L228.127 72.4356C227.711 72.81 227.35 73.2408 227.053 73.7154L225.821 75.687C225.283 76.5482 224.535 77.2587 223.647 77.7519L221.068 79.1846C220.691 79.3943 220.292 79.5626 219.878 79.6866L215.5 81L212.808 81.7691C212.272 81.9223 211.718 82 211.16 82H209H206.917C205.985 82 205.067 81.7831 204.233 81.3666L202.5 80.5L200 79L198.266 77.9594C197.758 77.6548 197.208 77.427 196.634 77.2835L195.5 77L194.139 76.6597C193.715 76.5536 193.303 76.4012 192.911 76.2055L191.5 75.5L190.767 75.1334C189.934 74.7169 189.015 74.5 188.084 74.5H186H182.656C181.893 74.5 181.136 74.3543 180.428 74.0709L180.073 73.9291C179.364 73.6457 178.608 73.5 177.845 73.5H177.162C176.075 73.5 175.008 73.7955 174.075 74.355L173 75L171.065 76.1611C170.69 76.3864 170.291 76.5698 169.876 76.7083L168.445 77.1853C167.824 77.3922 167.259 77.741 166.797 78.2038L166.465 78.5355C166.161 78.8398 165.782 79.059 165.366 79.171L165.328 79.1813C164.457 79.4163 163.527 79.1415 162.924 78.4705C162.646 78.1621 162.294 77.9311 161.9 77.7999L161.837 77.7789C161.294 77.5979 160.707 77.5979 160.164 77.7789L158.447 78.3511C158.15 78.4502 157.845 78.5259 157.536 78.5774L155.49 78.9184C155.164 78.9727 154.834 79 154.504 79H153.553C152.861 79 152.178 78.8389 151.559 78.5294C150.865 78.1825 150.274 77.6605 149.844 77.015L149.772 76.9074C149.591 76.6365 149.384 76.384 149.154 76.1538L147.92 74.9201C147.641 74.6407 147.39 74.3344 147.171 74.0057L146.5 73C145.859 72.0372 145.612 70.8641 145.813 69.7246L146.017 68.5699C146.153 67.8013 146.137 67.0137 145.971 66.2511L144.5 59.5L142.66 52.139C142.554 51.7143 142.402 51.3025 142.206 50.9109L140.846 48.1913C140.623 47.7457 140.246 47.3965 139.784 47.2088C138.742 46.7848 137.553 47.2801 137.119 48.3187L136 51L131.5 59.5L129.991 62.0753C128.192 65.1473 123.674 64.9054 122.212 61.6588L122.04 61.2751C121.606 60.3122 120.761 59.5964 119.74 59.327C118.94 59.1159 118.24 58.6278 117.765 57.9495L115.254 54.3621C115.085 54.121 114.934 53.8679 114.803 53.6046L113.285 50.5685C113.096 50.1906 112.867 49.8336 112.603 49.5036L112.027 48.7839C111.366 47.9572 110.423 47.4037 109.379 47.2297C108.483 47.0804 107.563 47.2188 106.751 47.6249L106.359 47.8206C106.12 47.9401 105.873 48.0424 105.62 48.1268L103.801 48.733C103.271 48.9098 102.715 49 102.156 49H101.061C100.382 49 99.7306 49.2698 99.2504 49.75C98.7701 50.2302 98.1188 50.5 97.4397 50.5H97.3922C96.8133 50.5 96.25 50.3122 95.7869 49.9649L95.2028 49.5269C94.7468 49.1849 94.1922 49 93.6222 49C93.2133 49 92.8099 49.0952 92.4441 49.2781L91.4725 49.7639C90.5089 50.2458 89.6927 50.9781 89.1098 51.8841L85.76 57.0909L84.9634 58.1165C84.1128 59.2115 82.6073 59.5535 81.3671 58.9334C80.8045 58.6521 80.3483 58.1959 80.067 57.6332L77.1338 51.7669C76.7172 50.9337 76.1124 50.209 75.3672 49.6502L74.9145 49.3106C74.6402 49.1049 74.3345 48.9447 74.0092 48.8363L73.7395 48.7464C73.2597 48.5865 72.741 48.5865 72.2612 48.7464C71.7681 48.9108 71.3438 49.2348 71.0555 49.6673L70.5004 50.5L67.798 55.4627C67.5701 55.8812 67.3928 56.3253 67.27 56.7858L63.7943 69.8169C63.3949 71.3143 61.7144 72.0599 60.3361 71.3513C59.5889 70.9671 58.6962 70.9963 57.9756 71.4285L57.8238 71.5196C56.6625 72.2162 55.1669 71.9628 54.2998 70.9226L54.1897 70.7905C53.2185 69.6253 51.5216 69.3871 50.2671 70.2399L47.962 71.8069C45.8369 73.2515 42.9298 72.5543 41.691 70.303C41.1389 69.2995 40.214 68.5536 39.1163 68.2265L37.6186 67.7802C35.9553 67.2845 34.588 66.0929 33.8698 64.5129L32.5004 61.5L31.1712 58.8416C31.0575 58.6143 30.9237 58.3977 30.7712 58.1944L29.9926 57.1563C29.6827 56.7431 29.1964 56.5 28.68 56.5C28.2448 56.5 27.8275 56.6729 27.5198 56.9806L27.4697 57.0307C27.1666 57.3337 26.9808 57.7343 26.9452 58.1614L26.5004 63.5L26.0004 74L25.5502 78.5016C25.517 78.8333 25.4563 79.1616 25.3686 79.4833L24.8394 81.4235C24.3524 83.2091 22.6662 84.3974 20.8209 84.2554C18.9133 84.1087 17.1863 85.3819 16.7623 87.2475L15.6128 92.3054C15.228 93.9983 14.0561 95.4047 12.4604 96.0885L12.1192 96.2348C11.7104 96.41 11.3388 96.6616 11.0243 96.9761C10.3687 97.6317 10.0004 98.5209 10.0004 99.4481Z" fill="url(#pattern0_61473_127282)" fill-opacity="0.5"/>
+      <path id="line-full" d="M-0.5 139.791L9.09656 125.38C9.75253 124.395 10.1025 123.238 10.1025 122.054V99.4228C10.1025 98.0442 11.2201 96.9266 12.5988 96.9266C13.7296 96.9266 14.7191 96.1664 15.0106 95.0738L16.9787 87.697C17.4618 85.8863 19.2268 84.7263 21.0806 85.0012C23.1975 85.3151 25.1359 83.7661 25.2966 81.6321L26.6543 63.6027V59.6124C26.6543 58.4877 27.566 57.576 28.6906 57.576C29.47 57.576 30.181 58.0209 30.5219 58.7217L34.252 66.3916C35.0044 67.9385 36.5737 68.9203 38.2939 68.9203H39.0927C40.5592 68.9203 41.8596 69.8627 42.3162 71.2563C43.0302 73.4354 45.6558 74.293 47.5184 72.9554L50.8913 70.5331C52.1454 69.6325 53.887 69.8839 54.8351 71.1024L54.9847 71.2947C55.8131 72.3592 57.3166 72.616 58.4513 71.8869L58.5921 71.7964C59.3104 71.3349 60.2237 71.304 60.9715 71.7158C62.309 72.4525 63.9815 71.7222 64.3505 70.2405L67.8051 56.367C67.9566 55.7587 68.2024 55.178 68.5337 54.6458L71.0119 50.6648C71.2306 50.3136 71.5246 50.0153 71.8728 49.7916C73.1226 48.9886 74.7824 49.305 75.649 50.5116L77.1788 52.6413C77.3348 52.8584 77.4748 53.0865 77.5979 53.3238L80.5189 58.9544C80.6543 59.2154 80.8314 59.4526 81.0431 59.6567C82.4511 61.0138 84.7896 60.4752 85.462 58.6388L86.0366 57.0697C86.1718 56.7005 86.3636 56.3545 86.6051 56.0442L90.4425 51.1127C90.9358 50.4788 91.6367 50.0391 92.4221 49.8709L93.1796 49.7087C93.9971 49.5336 94.8428 49.8415 95.3562 50.5013L95.5785 50.7871C96.4017 51.845 98.0268 51.76 98.7352 50.622C99.1797 49.9079 100.036 49.5647 100.851 49.7741L101.389 49.9123C101.942 50.0546 102.527 50.0165 103.057 49.8035L106.655 48.3588C109.343 47.207 112.446 48.5668 113.421 51.3245L114.084 53.1987C114.279 53.7506 114.554 54.2709 114.9 54.7431L118.072 59.0738C118.525 59.6922 119.245 60.0576 120.012 60.0576C120.95 60.0576 121.803 60.6033 122.196 61.4553L122.66 62.4617C124.057 65.4913 128.281 65.7052 129.977 62.8323L132.034 59.3486L136.862 50.3869C136.953 50.2173 137.021 50.036 137.062 49.848C137.459 48.064 139.79 47.6079 140.83 49.111L142.161 51.035C142.396 51.3745 142.561 51.7573 142.646 52.1611L144.172 59.3486L145.933 65.8547C146.224 66.9308 146.203 68.0676 145.871 69.132L145.851 69.1967C145.167 71.3954 145.857 73.7906 147.605 75.2888C147.89 75.533 148.151 75.8045 148.383 76.0993L149.568 77.6035C151.016 79.4419 153.401 80.2704 155.678 79.7257L160.982 78.4565C161.773 78.2672 162.595 78.6188 163.004 79.3218C163.713 80.5384 165.468 80.5441 166.185 79.3323L166.266 79.1951C166.532 78.7456 166.968 78.4224 167.475 78.2988L169.819 77.728C170.63 77.5305 171.39 77.1661 172.052 76.658L174.03 75.1399C175.86 73.7356 178.355 73.5718 180.352 74.7249C181.4 75.3299 182.613 75.5858 183.816 75.4556L186.882 75.1238C187.951 75.008 189.032 75.1818 190.011 75.6269L193.459 77.1947C193.801 77.3502 194.157 77.4733 194.523 77.5623L197.348 78.2505C198.005 78.4104 198.63 78.6801 199.196 79.0482L203.123 81.5981C203.925 82.1196 204.841 82.4413 205.794 82.5365L210.259 82.9826C211.039 83.0606 211.827 82.9848 212.578 82.7597L218.104 81.1031C218.392 81.0169 218.673 80.9093 218.944 80.781L223.084 78.8254C224.038 78.3748 224.856 77.6807 225.456 76.813L227.116 74.4139C227.359 74.0613 227.64 73.7358 227.954 73.4431L232.669 69.0365C233.249 68.494 233.949 68.0963 234.712 67.8756C235.558 67.631 236.453 67.6119 237.308 67.8202L237.538 67.876C239.324 68.311 241.211 67.8934 242.646 66.7453L243.878 65.7604C245.043 64.8282 246.515 64.364 248.004 64.4583L249.845 64.5749C250.793 64.6349 251.741 64.4693 252.611 64.0917L254.818 63.1348C256.644 62.3432 258.766 62.7146 260.214 64.0795C262.914 66.624 267.349 65.428 268.403 61.8709L270.517 54.74L276.332 38.7748C276.501 38.312 276.612 37.8303 276.663 37.3405L278.15 23.0067C278.21 22.4221 278.357 21.8497 278.584 21.3076L281.803 13.6212C282.194 12.6881 282.815 11.869 283.607 11.2401L286.885 8.63807C287.169 8.41298 287.478 8.22225 287.806 8.06989C289.751 7.1676 292.062 7.73345 293.37 9.43236L294.817 11.3128C295.614 12.3478 296.727 13.0946 297.987 13.4396L300.121 14.0241C301.581 14.4241 302.675 15.6377 302.922 17.1317C303.318 19.5365 305.81 20.9828 308.095 20.1347L311.329 18.9345L313.986 17.9485C314.742 17.6677 315.568 17.633 316.346 17.8494C317.917 18.2868 319.593 17.6813 320.522 16.3406L323.575 11.9339C323.779 11.6406 324.037 11.3899 324.336 11.1956L324.989 10.7717C325.627 10.3572 326.462 10.4148 327.038 10.913C328.047 11.7866 329.623 11.2183 329.842 9.90194L330.905 3.51383C331.141 2.09795 332.951 1.64414 333.827 2.7815C334.546 3.7156 335.986 3.61054 336.562 2.58194L336.762 2.22434C337.208 1.42805 338.154 1.05755 339.022 1.33942L339.875 1.61654C340.479 1.81252 341.129 1.81252 341.733 1.61654L344.434 0.739417C344.922 0.580816 345.432 0.500034 345.946 0.500034C347.811 0.500034 349.514 1.5594 350.338 3.23222L352.576 7.77561C353.072 8.78261 353.985 9.52134 355.074 9.79658L355.394 9.87749C355.895 10.0044 356.423 9.98468 356.913 9.8208C357.886 9.49614 358.958 9.74897 359.683 10.4738L360.5 11.291" stroke="url(#paint0_linear_61473_127283)" stroke-width="1" stroke-linecap="round"/>
+    </g>
+
+    <!-- W-managed chart (stocks excluded) -->
+    <g id="chart-w" style="visibility:hidden;">
+      <path id="fill-w" mask="url(#dotMask)" style="opacity:0" d="M-0.5 141 L-0.5 118 C12 115,22 111,38 107 C50 104,57 113,68 115 C79 117,86 109,98 103 C110 97,118 95,130 98 C141 101,148 107,160 104 C170 101,175 93,186 89 C197 85,205 82,216 85 C226 88,230 82,240 75 C250 68,254 70,265 67 C275 64,280 57,292 52 C301 48,307 53,317 47 C327 41,334 50,342 47 C349 44,355 39,360.5 36 L360.5 141 Z" fill="url(#pattern0_61473_127282)" fill-opacity="0.5"/>
+      <path id="line-w" style="stroke-dasharray:9999;stroke-dashoffset:9999;" d="M-0.5 118 C12 115,22 111,38 107 C50 104,57 113,68 115 C79 117,86 109,98 103 C110 97,118 95,130 98 C141 101,148 107,160 104 C170 101,175 93,186 89 C197 85,205 82,216 85 C226 88,230 82,240 75 C250 68,254 70,265 67 C275 64,280 57,292 52 C301 48,307 53,317 47 C327 41,334 50,342 47 C349 44,355 39,360.5 36" stroke="url(#paint0_linear_61473_127283)" stroke-width="1" stroke-linecap="round" fill="none"/>
+    </g>
+  </svg>
+</div>
+
+<!-- All Assets -->
+<div class="assets">
+  <div class="assets-hdr">
+    <span class="assets-title" id="assets-title">All Assets (7)</span>
+    <!-- iter-3: toggle lives here -->
+    <div class="assets-hdr-toggle w-toggle" onclick="toggleWManaged(this)">
+      <span class="w-letter">W</span>
+      <div class="toggle-track"><div class="toggle-dot"></div></div>
+    </div>
+  </div>
+
+  <div class="cards">
+
+    <!-- Stocks & ETF -->
+    <div class="card card-stocks" onclick="goToStocks()">
+      <!-- watermark -->
+      <img class="card-bg" src="file:///Users/pranjalsi/Downloads/Icons/Stocks Illustration.png" alt="">
+      <div class="card-left">
+        <div class="card-icon-row">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1.5 1.125C1.70711 1.125 1.875 1.29289 1.875 1.5V7C1.875 7.83546 1.87564 8.42438 1.93555 8.87012C1.99403 9.30508 2.10235 9.54766 2.27734 9.72266C2.45234 9.89765 2.69492 10.006 3.12988 10.0645C3.57562 10.1244 4.16454 10.125 5 10.125H10.5C10.7071 10.125 10.875 10.2929 10.875 10.5C10.875 10.7071 10.7071 10.875 10.5 10.875H4.97168C4.17084 10.875 3.53165 10.875 3.03027 10.8076C2.51214 10.738 2.08464 10.5905 1.74707 10.2529C1.4095 9.91536 1.26204 9.48786 1.19238 8.96973C1.12503 8.46835 1.12499 7.82916 1.125 7.02832V1.5C1.125 1.29289 1.29289 1.125 1.5 1.125ZM4 6.625C4.20711 6.625 4.375 6.79289 4.375 7V8.5C4.375 8.70711 4.20711 8.875 4 8.875C3.79289 8.875 3.625 8.70711 3.625 8.5V7C3.625 6.79289 3.79289 6.625 4 6.625ZM6 4.125C6.20711 4.125 6.375 4.29289 6.375 4.5V7C6.375 7.20711 6.20711 7.375 6 7.375C5.79289 7.375 5.625 7.20711 5.625 7V4.5C5.625 4.29289 5.79289 4.125 6 4.125ZM10 1.625C10.2071 1.625 10.375 1.79289 10.375 2V5C10.375 5.20711 10.2071 5.375 10 5.375C9.79289 5.375 9.625 5.20711 9.625 5V2C9.625 1.79289 9.79289 1.625 10 1.625ZM8 2.625C8.20711 2.625 8.375 2.79289 8.375 3V4.5C8.375 4.70711 8.20711 4.875 8 4.875C7.79289 4.875 7.625 4.70711 7.625 4.5V3C7.625 2.79289 7.79289 2.625 8 2.625Z" fill="#4DA4DD"/></svg>
+          STOCKS &amp; ETF
+        </div>
+      </div>
+      <div class="card-right">
+        <div class="card-amount">₹23.92Cr</div>
+        <div class="pos">+₹10.54L 1D</div>
+      </div>
+    </div>
+
+    <!-- Mutual Funds -->
+    <div class="card card-mutual" onclick="goToMF()">
+      <img class="card-bg" src="file:///Users/pranjalsi/Downloads/Icons/Mutual Funds Illustration.png" alt="">
+      <div class="card-left">
+        <div class="card-icon-row">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3.87778 1.40609C4.06747 1.32329 4.28896 1.40981 4.37192 1.59945C4.45485 1.78909 4.36807 2.0105 4.17856 2.09359C1.41951 3.30011 0.763128 7.08441 2.86411 9.16586C5.00351 11.2853 8.75466 10.4919 9.90414 7.7684C9.98465 7.57762 10.2046 7.48776 10.3954 7.5682C10.586 7.64867 10.6758 7.86869 10.5956 8.05941C9.24339 11.2638 4.85994 12.1978 2.33676 9.69809C-0.134204 7.25009 0.62522 2.82842 3.87778 1.40609ZM6.03598 1.07797C6.33432 0.893807 6.62126 0.842892 6.93539 0.893399C7.20491 0.936769 7.49601 1.05688 7.80844 1.18637C7.81919 1.19082 7.83085 1.19557 7.84164 1.20004C8.50449 1.47465 9.10672 1.87732 9.61411 2.38461C10.1216 2.89214 10.525 3.49492 10.7997 4.15805C10.8041 4.16874 10.8079 4.17964 10.8123 4.19027C10.9419 4.50274 11.0628 4.79377 11.1063 5.06332C11.1569 5.37756 11.106 5.66528 10.9217 5.96371C10.9068 5.98786 10.8827 6.02366 10.8661 6.04672C10.6458 6.35207 10.3573 6.49865 10.0116 6.56527C9.70205 6.62485 9.31734 6.62488 8.87485 6.62484H7.75961C7.30207 6.62486 6.92124 6.62444 6.61899 6.58383C6.30022 6.54097 6.01342 6.44693 5.78305 6.21664C5.55266 5.98625 5.45775 5.69954 5.41489 5.3807C5.37426 5.07848 5.37483 4.69759 5.37485 4.24008V3.12387C5.37481 2.68131 5.37477 2.29667 5.43442 1.98715C5.50106 1.64158 5.64771 1.35383 5.95297 1.13363C5.97604 1.11701 6.01185 1.09287 6.03598 1.07797ZM6.81625 1.63363C6.6793 1.61163 6.57422 1.6273 6.42953 1.71664C6.42041 1.72231 6.39985 1.73597 6.39145 1.74203C6.27435 1.82653 6.20974 1.92737 6.17075 2.12973C6.12638 2.36025 6.12485 2.67166 6.12485 3.15805V4.21371C6.12485 4.70419 6.12492 5.03466 6.15805 5.28109C6.18974 5.51658 6.24554 5.61858 6.31332 5.68637C6.38113 5.75411 6.48315 5.809 6.7186 5.84066C6.96505 5.8738 7.29543 5.87484 7.78598 5.87484H8.84164C9.32803 5.87484 9.63946 5.87334 9.86996 5.82895C10.0723 5.78996 10.1732 5.72532 10.2577 5.60824C10.2638 5.59972 10.2775 5.57812 10.2831 5.56918C10.3723 5.42456 10.3881 5.31944 10.3661 5.18246C10.3382 5.01012 10.2537 4.80105 10.1063 4.44516C9.86931 3.87305 9.52171 3.35276 9.08383 2.91488C8.64611 2.47726 8.12636 2.13032 7.55453 1.8934C7.19836 1.74586 6.98867 1.66138 6.81625 1.63363Z" fill="#7A7AC6"/></svg>
+          MUTUAL FUNDS
+        </div>
+      </div>
+      <div class="card-right">
+        <div class="card-amount">₹35.42L</div>
+        <div class="neg">-₹2.99L 1D</div>
+      </div>
+    </div>
+
+    <!-- AIF -->
+    <div class="card card-aif">
+      <img class="card-bg" src="file:///Users/pranjalsi/Downloads/Icons/Aif Illustration.png" alt="">
+      <div class="card-left">
+        <div class="card-icon-row">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M10.4422 1.55779C10.7693 1.88489 10.8873 2.33649 10.874 2.81202C10.8608 3.28647 10.7176 3.82053 10.4797 4.37554C10.2587 4.89137 9.94895 5.44113 9.56275 5.99998C9.94895 6.55883 10.2587 7.10858 10.4797 7.62443C10.7176 8.17943 10.8608 8.71353 10.874 9.18798C10.8873 9.66348 10.7693 10.1151 10.4422 10.4422C10.1151 10.7693 9.6635 10.8872 9.18795 10.874C8.7135 10.8607 8.17945 10.7176 7.62445 10.4797C7.1086 10.2586 6.55885 9.94893 6 9.56278C5.44115 9.94893 4.8914 10.2586 4.37555 10.4797C3.82054 10.7176 3.28647 10.8607 2.81203 10.874C2.33649 10.8872 1.88489 10.7693 1.55779 10.4422C1.2307 10.1151 1.11273 9.66348 1.126 9.18798C1.13924 8.71353 1.2824 8.17943 1.52026 7.62443C1.74133 7.10858 2.05104 6.55883 2.43721 5.99998C2.05104 5.44113 1.74133 4.89137 1.52026 4.37554C1.2824 3.82053 1.13924 3.28647 1.126 2.81202C1.11273 2.33649 1.2307 1.88489 1.55779 1.55779C1.88489 1.23069 2.33649 1.11273 2.81203 1.126C3.28647 1.13923 3.82054 1.28239 4.37555 1.52026C4.8914 1.74133 5.44115 2.05104 6 2.43721C6.55885 2.05104 7.1086 1.74133 7.62445 1.52026C8.17945 1.28239 8.7135 1.13923 9.18795 1.126C9.6635 1.11273 10.1151 1.23069 10.4422 1.55779ZM9.08975 6.64008C8.7465 7.07613 8.36 7.51193 7.93595 7.93598C7.51195 8.35998 7.0761 8.74648 6.64005 9.08978C7.086 9.38263 7.518 9.61813 7.91985 9.79038C8.4231 10.006 8.8608 10.1146 9.20885 10.1243C9.55585 10.134 9.77755 10.0461 9.91185 9.91188C10.0462 9.77758 10.134 9.55588 10.1243 9.20888C10.1146 8.86078 10.0061 8.42313 9.79035 7.91988C9.61815 7.51803 9.3826 7.08603 9.08975 6.64008ZM2.91022 6.64008C2.61736 7.08603 2.38184 7.51803 2.20962 7.91988C1.99394 8.42313 1.88542 8.86078 1.87571 9.20888C1.86602 9.55588 1.95384 9.77758 2.08812 9.91188C2.22241 10.0461 2.44411 10.134 2.79111 10.1243C3.13919 10.1146 3.57686 10.006 4.08011 9.79038C4.48196 9.61813 4.91395 9.38263 5.3599 9.08978C4.92385 8.74648 4.48804 8.35998 4.06401 7.93598C3.63999 7.51193 3.2535 7.07613 2.91022 6.64008ZM6 3.36334C5.53225 3.71834 5.05785 4.13082 4.59434 4.59434C4.13082 5.05788 3.71834 5.53223 3.36334 5.99998C3.71834 6.46773 4.13082 6.94213 4.59434 7.40563C5.05785 7.86918 5.53225 8.28163 6 8.63663C6.46775 8.28163 6.9421 7.86918 7.40565 7.40563C7.86915 6.94213 8.28165 6.46773 8.63665 5.99998C8.28165 5.53228 7.86915 5.05788 7.40565 4.59434C6.9421 4.13082 6.4677 3.71834 6 3.36334ZM9.20885 1.8757C8.8608 1.88542 8.4231 1.99394 7.91985 2.20962C7.518 2.38184 7.086 2.61736 6.64005 2.91022C7.0761 3.25349 7.51195 3.63998 7.93595 4.06401C8.36 4.48803 8.7465 4.92387 9.08975 5.35993C9.3826 4.91396 9.61815 4.48196 9.79035 4.0801C10.0061 3.57686 10.1146 3.13918 10.1243 2.7911C10.134 2.44411 10.0462 2.2224 9.91185 2.08812C9.77755 1.95383 9.55585 1.86602 9.20885 1.8757ZM2.79111 1.8757C2.44411 1.86602 2.22241 1.95383 2.08812 2.08812C1.95384 2.2224 1.86602 2.44411 1.87571 2.7911C1.88542 3.13918 1.99394 3.57686 2.20962 4.0801C2.38184 4.48196 2.61736 4.91396 2.91022 5.35993C3.2535 4.92387 3.63999 4.48803 4.06401 4.06401C4.48804 3.63998 4.92385 3.25349 5.3599 2.91022C4.91395 2.61736 4.48196 2.38184 4.08011 2.20962C3.57686 1.99394 3.13919 1.88542 2.79111 1.8757ZM6 5.49998C5.72385 5.49998 5.5 5.72388 5.5 5.99998C5.5 6.27613 5.72385 6.49998 6 6.49998H6.0045C6.2806 6.49998 6.5045 6.27613 6.5045 5.99998C6.5045 5.72388 6.2806 5.49998 6.0045 5.49998H6Z" fill="#9D615C"/></svg>
+          AIF
+        </div>
+      </div>
+      <div class="card-right">
+        <div class="card-amount">₹2.45Cr</div>
+        <div class="muted">1 AIFs</div>
+      </div>
+    </div>
+
+    <!-- PMS -->
+    <div class="card card-pms">
+      <img class="card-bg" src="file:///Users/pranjalsi/Downloads/Icons/PMS illustration.png" alt="">
+      <div class="card-left">
+        <div class="card-icon-row">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8.00865 2.25001C8.38844 2.24992 8.64262 2.25002 8.88658 2.30958C8.99699 2.33653 9.10486 2.37234 9.20885 2.417C9.43979 2.5162 9.63758 2.66822 9.9276 2.89161C9.93916 2.90051 9.95089 2.90982 9.96276 2.91895L9.97838 2.93165C10.5014 3.33431 10.9158 3.65343 11.2206 3.93946C11.5319 4.23171 11.7622 4.51806 11.8827 4.86817C11.9815 5.15562 12.0182 5.45912 11.9911 5.76075C11.9579 6.12955 11.8016 6.45867 11.5672 6.8086C11.3385 7.15016 11.0108 7.54602 10.5985 8.04395L8.57018 10.4951C8.20198 10.9398 7.89879 11.3052 7.62096 11.5557C7.32925 11.8186 7.0164 12 6.62487 12C6.23332 12 5.92049 11.8187 5.62877 11.5557C5.35103 11.3053 5.04858 10.9396 4.68053 10.4951L2.65123 8.04395C2.23895 7.54605 1.91121 7.15015 1.68248 6.8086C1.44817 6.45869 1.29182 6.12952 1.25865 5.76075C1.23155 5.45912 1.26821 5.15561 1.36705 4.86817C1.48748 4.51807 1.71782 4.2317 2.02916 3.93946C2.33387 3.65345 2.74833 3.33427 3.27135 2.93165L3.28697 2.91895C3.29881 2.90984 3.3106 2.90049 3.32213 2.89161C3.61215 2.66822 3.80994 2.51619 4.04088 2.417C4.14486 2.37234 4.25275 2.33654 4.36315 2.30958C4.60707 2.25003 4.86138 2.24992 5.24108 2.25001H8.00865ZM5.286 3.00001C4.84514 3.00001 4.68635 3.00258 4.54088 3.03809C4.47053 3.05528 4.40217 3.07837 4.33678 3.10645C4.20319 3.16386 4.08287 3.25259 3.74498 3.5127C3.20231 3.93046 2.81667 4.22839 2.54186 4.48633C2.27099 4.74064 2.14055 4.92766 2.07701 5.11231C2.01226 5.30064 1.98819 5.49785 2.00572 5.69337C2.02283 5.8836 2.10365 6.09015 2.30553 6.39161C2.51052 6.6977 2.81346 7.06444 3.24205 7.58204L5.23912 9.99317C5.63074 10.4661 5.89859 10.7887 6.13072 10.9981C6.35374 11.1991 6.4945 11.25 6.62487 11.25C6.75525 11.25 6.89595 11.1991 7.11901 10.9981C7.35116 10.7887 7.61894 10.4662 8.01061 9.99317L10.0077 7.58204C10.4363 7.06444 10.7392 6.6977 10.9442 6.39161C11.1461 6.09015 11.2269 5.8836 11.244 5.69337C11.2615 5.49785 11.2375 5.30064 11.1727 5.11231C11.1092 4.92766 10.9788 4.74066 10.7079 4.48633C10.4331 4.22839 10.0474 3.93046 9.50475 3.5127C9.16683 3.25256 9.04658 3.16386 8.91295 3.10645C8.84752 3.07834 8.77925 3.05529 8.70885 3.03809C8.56336 3.00258 8.40471 3.00001 7.96373 3.00001H5.286ZM7.62487 5.00001C7.83196 5.00001 7.99985 5.16792 7.99987 5.37501C7.99987 5.58211 7.83197 5.75001 7.62487 5.75001H5.62487C5.4178 5.74996 5.24987 5.58209 5.24987 5.37501C5.24989 5.16794 5.41781 5.00005 5.62487 5.00001H7.62487Z" fill="url(#paint0_linear_pms)"/><defs><linearGradient id="paint0_linear_pms" x1="1.25" y1="2.25" x2="13.6485" y2="8.94818" gradientUnits="userSpaceOnUse"><stop stop-color="#FFDD8D"/><stop offset="1" stop-color="#685021"/></linearGradient></defs></svg>
+          PMS
+        </div>
+      </div>
+      <div class="card-right">
+        <div class="card-amount">₹51.29L</div>
+        <div class="pos">+₹15,004.34 1D</div>
+      </div>
+    </div>
+
+    <!-- Unlisted Shares -->
+    <div class="card card-unlisted">
+      <img class="card-bg" src="file:///Users/pranjalsi/Downloads/Icons/Unlisted shares Illustration.png" alt="">
+      <div class="card-left">
+        <div class="card-icon-row">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10.5189 7.12598C10.7257 7.13651 10.8849 7.31269 10.8743 7.51953C10.8373 8.24613 10.7988 8.83706 10.6937 9.30957C10.5856 9.7951 10.4 10.1902 10.0501 10.502C9.6734 10.8375 9.20768 10.9862 8.63508 11.0566C8.07625 11.1254 7.36398 11.125 6.46223 11.125H5.53742C4.63558 11.125 3.92343 11.1254 3.36457 11.0566C2.79197 10.9862 2.32625 10.8375 1.94953 10.502C1.59973 10.1902 1.41502 9.79506 1.30695 9.30957C1.20182 8.83703 1.16232 8.24623 1.12531 7.51953C1.11478 7.31272 1.27398 7.13655 1.48078 7.12598C1.68746 7.11545 1.86356 7.27386 1.87434 7.48047C1.91197 8.21963 1.9493 8.74719 2.0384 9.14746C2.12463 9.53467 2.25235 9.76759 2.44855 9.94238C2.66415 10.1344 2.95706 10.2501 3.45637 10.3115C3.96404 10.374 4.62956 10.375 5.56281 10.375H6.43684C7.3704 10.375 8.03651 10.374 8.54426 10.3115C9.04322 10.2501 9.33558 10.1343 9.55109 9.94238C9.7473 9.7676 9.87502 9.53465 9.96125 9.14746C10.0503 8.74719 10.0877 8.21963 10.1253 7.48047C10.1361 7.27389 10.3122 7.1155 10.5189 7.12598ZM6.08234 0.875C6.40988 0.874983 6.69172 0.875465 6.92316 0.90625C7.17386 0.939642 7.40278 1.01289 7.60578 1.18359C7.80355 1.35003 7.92521 1.56547 8.02375 1.8125C8.10997 2.02873 8.18954 2.30017 8.28254 2.625H9.67609C10.4004 2.62507 10.8305 3.16129 11.0091 3.7041C11.1862 4.24271 11.1663 4.90634 10.9085 5.39648C10.0277 7.07121 8.14634 7.77865 6.37531 7.86523V8.25C6.37531 8.45699 6.20726 8.62481 6.00031 8.625C5.79321 8.625 5.62531 8.45711 5.62531 8.25V7.86523C3.85418 7.77881 1.97312 7.07122 1.09211 5.39648C0.834356 4.90634 0.813421 4.24271 0.990547 3.7041C1.1691 3.16133 1.59936 2.6252 2.32355 2.625H3.71711C3.81014 2.30008 3.88966 2.02877 3.9759 1.8125C4.07448 1.5653 4.19694 1.3501 4.39484 1.18359C4.59775 1.01298 4.82593 0.939665 5.07648 0.90625C5.30805 0.875407 5.59049 0.874983 5.91828 0.875H6.08234ZM2.32355 3.375C2.04942 3.37518 1.82672 3.5638 1.70344 3.93848C1.57871 4.31774 1.60746 4.76576 1.7552 5.04688C2.51115 6.48439 4.25371 7.125 6.00031 7.125C7.7468 7.12491 9.48855 6.48429 10.2445 5.04688C10.3922 4.76577 10.4209 4.31778 10.2962 3.93848C10.1729 3.56373 9.95033 3.37507 9.67609 3.375H2.32355ZM5.94172 1.625C5.58399 1.625 5.35232 1.62597 5.17609 1.64941C5.01346 1.67108 4.93615 1.70732 4.87727 1.75684C4.81345 1.8105 4.75001 1.8981 4.67316 2.09082C4.61808 2.22898 4.56496 2.40082 4.49934 2.625H7.50129C7.43567 2.40083 7.38254 2.22898 7.32746 2.09082C7.25061 1.89809 7.1862 1.8105 7.12238 1.75684C7.06356 1.70751 6.98675 1.67102 6.82453 1.64941C6.64831 1.62595 6.41665 1.625 6.05891 1.625H5.94172Z" fill="#A1B55C"/></svg>
+          UNLISTED SHARES
+        </div>
+      </div>
+      <div class="card-right">
+        <div class="card-amount">07</div>
+        <div class="muted">Stocks</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Iteration 4: skeleton loader overlay -->
+<div id="skel4">
+  <div class="s4-hdr">
+    <div class="s4-bar s4-pill"></div>
+  </div>
+  <div class="s4-nw">
+    <div class="s4-bar s4-lbl"></div>
+    <div class="s4-bar s4-amt"></div>
+    <div class="s4-bar s4-sub"></div>
+  </div>
+  <div class="s4-chart">
+    <canvas id="skel4-canvas" width="360" height="141"></canvas>
+  </div>
+  <div class="s4-assets">
+    <div class="s4-bar s4-atitle"></div>
+    <div class="s4-cards">
+      <div class="s4-card"></div>
+      <div class="s4-card"></div>
+      <div class="s4-card"></div>
+      <div class="s4-card"></div>
+      <div class="s4-card"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Bottom Navigation -->
+<div class="bottom-nav">
+  <!-- Wealth (active) -->
+  <div class="nav-item active">
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path opacity="0.4" d="M0.917826 9.96954C0.623643 8.0552 0.476551 7.09803 0.838471 6.24948C1.20039 5.40093 2.00335 4.82036 3.60928 3.65922L4.80916 2.79167C6.80691 1.34722 7.80578 0.625 8.95833 0.625C10.1109 0.625 11.1098 1.34722 13.1075 2.79167L14.3074 3.65922C15.9133 4.82036 16.7163 5.40093 17.0782 6.24948C17.4401 7.09803 17.293 8.0552 16.9988 9.96954L16.748 11.602C16.3309 14.3158 16.1224 15.6727 15.1492 16.4822C14.1759 17.2917 12.7531 17.2917 9.90734 17.2917H8.00932C5.16361 17.2917 3.74076 17.2917 2.7675 16.4822C1.79424 15.6727 1.58572 14.3158 1.16869 11.602L0.917826 9.96954Z" fill="#C7A865"/><path d="M8.95801 0C9.67963 0 10.325 0.230306 11.0215 0.621094C11.6964 0.999835 12.4699 1.55953 13.4424 2.2627L14.7002 3.17188C15.4805 3.73608 16.1041 4.18641 16.5742 4.60352C17.0597 5.03423 17.423 5.4638 17.6533 6.00391C17.8841 6.54503 17.9401 7.09981 17.9092 7.73926C17.8793 8.35649 17.7648 9.1017 17.6221 10.0303L17.3594 11.7402C17.1566 13.0599 16.995 14.111 16.7578 14.9297C16.5125 15.7762 16.1664 16.4482 15.5488 16.9619C14.9337 17.4736 14.2008 17.7018 13.3057 17.8105C12.4349 17.9163 11.3366 17.916 9.94922 17.916H7.96777C6.58032 17.916 5.48114 17.9163 4.61035 17.8105C3.71544 17.7018 2.9832 17.4735 2.36817 16.9619C1.75046 16.4481 1.40451 15.7763 1.15918 14.9297C0.921943 14.1109 0.760421 13.06 0.557619 11.7402L0.294923 10.0303C0.152212 9.10167 0.0376978 8.35651 0.00781387 7.73926C-0.0231058 7.09977 0.0328604 6.54506 0.263673 6.00391C0.494043 5.46384 0.857354 5.03421 1.34277 4.60352C1.8129 4.18643 2.43649 3.73605 3.2168 3.17188L4.47363 2.2627C5.44609 1.55956 6.21963 0.999833 6.89453 0.621094C7.59102 0.230253 8.23638 5.13139e-05 8.95801 0ZM8.95801 1.25C8.52738 1.25005 8.09694 1.37986 7.50684 1.71094C6.90193 2.05039 6.18543 2.56714 5.17481 3.29785L3.97559 4.16504C3.16254 4.7529 2.58984 5.16822 2.17188 5.53906C1.76411 5.90089 1.54462 6.18582 1.41309 6.49414C1.28204 6.8014 1.23022 7.15007 1.25586 7.67969C1.28225 8.22414 1.38616 8.90445 1.53516 9.87402L1.78613 11.5068C1.99719 12.8802 2.14741 13.8505 2.35938 14.582C2.56584 15.2945 2.81157 15.7053 3.16699 16.001C3.52511 16.2988 3.99068 16.4757 4.76172 16.5693C5.54829 16.6649 6.5706 16.666 8.00879 16.666H9.90723C11.3457 16.666 12.3686 16.6649 13.1553 16.5693C13.9261 16.4757 14.391 16.2988 14.749 16.001C15.1045 15.7053 15.3501 15.2946 15.5566 14.582C15.7686 13.8506 15.9188 12.8802 16.1299 11.5068L16.3809 9.87402C16.5299 8.90443 16.6338 8.22415 16.6602 7.67969C16.6858 7.15007 16.634 6.8014 16.5029 6.49414C16.3714 6.18582 16.152 5.90094 15.7441 5.53906C15.3262 5.16823 14.7544 4.75289 13.9414 4.16504L12.7412 3.29785C11.7306 2.56714 11.0151 2.05039 10.4102 1.71094C9.81976 1.37964 9.38881 1.25 8.95801 1.25ZM11.0742 12.6318C11.3466 12.4198 11.7391 12.4688 11.9512 12.7412C12.1631 13.0136 12.1141 13.4062 11.8418 13.6182C11.0639 14.2236 10.0529 14.583 8.95801 14.583C7.86306 14.583 6.85214 14.2237 6.07422 13.6182C5.80197 13.4062 5.75317 13.0136 5.96485 12.7412C6.17686 12.4688 6.56942 12.4198 6.8418 12.6318C7.39629 13.0635 8.13611 13.333 8.95801 13.333C9.77988 13.333 10.5197 13.0634 11.0742 12.6318Z" fill="#C7A865"/></svg>
+    <span class="nav-label">Wealth</span>
+  </div>
+
+  <!-- Discover -->
+  <div class="nav-item">
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8.95801 0C13.9055 1.12753e-07 17.916 4.01045 17.916 8.95801C17.916 9.30319 17.6362 9.58301 17.291 9.58301C16.946 9.58283 16.666 9.30308 16.666 8.95801C16.666 7.25378 16.1122 5.67951 15.1758 4.40332C14.6332 4.52573 14.0685 4.80287 13.6514 5.34277C12.9741 6.21937 12.2475 6.75875 11.5107 6.97559C10.7598 7.19656 10.0506 7.0647 9.48438 6.69824C8.64611 6.15562 8.53773 5.39696 8.4668 4.90039C8.46257 4.87077 8.45822 4.84211 8.4541 4.81445C8.41551 4.55509 8.38121 4.39854 8.31152 4.26953C8.25341 4.16202 8.14747 4.03279 7.88477 3.90527C7.19613 3.57083 6.82059 2.94901 6.70605 2.28906C6.6666 2.06158 6.65836 1.82718 6.67676 1.59277C3.86453 2.46283 1.74162 4.89944 1.3252 7.88281C1.84991 8.26746 2.49023 8.55653 3.19824 8.55664C3.75333 8.55664 4.23201 8.58294 4.63379 8.6582C5.03649 8.73364 5.40665 8.86634 5.70703 9.1123C6.3319 9.62421 6.42381 10.4259 6.42383 11.251C6.42383 12.1001 6.42511 12.4578 6.4707 12.7627C6.51437 13.0547 6.59893 13.3051 6.82129 13.9424C7.07316 14.6643 7.24245 15.5422 6.84082 16.3691C7.51375 16.561 8.22351 16.666 8.95801 16.666C9.30308 16.666 9.58283 16.946 9.58301 17.291C9.58301 17.6362 9.30319 17.916 8.95801 17.916C4.01045 17.916 1.1275e-07 13.9055 0 8.95801C0 4.01045 4.01045 0 8.95801 0ZM13.1699 9.16602C15.3797 9.16608 17.1729 10.9547 17.1729 13.1631C17.1728 14.0493 16.8842 14.8678 16.3955 15.5303L17.7305 16.8467C17.9759 17.089 17.9785 17.4848 17.7363 17.7305C17.494 17.976 17.0983 17.9786 16.8525 17.7363L15.5059 16.4092C14.8483 16.8815 14.0414 17.1592 13.1699 17.1592C10.9601 17.1592 9.16609 15.3715 9.16602 13.1631C9.16602 10.9546 10.9601 9.16602 13.1699 9.16602ZM1.25781 9.31152C1.38989 12.2374 3.15351 14.7373 5.66016 15.9258C5.90757 15.5198 5.87656 15.0279 5.6416 14.3545C5.636 14.3384 5.63049 14.3224 5.625 14.3066C5.42393 13.7306 5.29729 13.368 5.23438 12.9473C5.17333 12.5388 5.17379 12.082 5.17383 11.3135C5.17383 11.2931 5.17383 11.2718 5.17383 11.251C5.17381 10.4209 5.04804 10.1881 4.91504 10.0791C4.83629 10.0146 4.69116 9.94064 4.40332 9.88672C4.11459 9.83267 3.72615 9.80664 3.19824 9.80664C2.46888 9.80656 1.81521 9.60202 1.25781 9.31152ZM13.1699 10.416C11.648 10.416 10.416 11.6474 10.416 13.1631C10.4161 14.6787 11.6481 15.9092 13.1699 15.9092C13.9237 15.9091 14.6066 15.6071 15.1035 15.1182C15.6096 14.62 15.9228 13.9278 15.9229 13.1631C15.9229 11.6474 14.6918 10.4161 13.1699 10.416ZM8.95801 1.25C8.63116 1.25 8.30931 1.27204 7.99316 1.31152C7.91552 1.57796 7.89734 1.84361 7.9375 2.0752C7.99559 2.41014 8.16398 2.65173 8.43066 2.78125C8.9012 3.00964 9.21461 3.31128 9.41113 3.6748C9.59595 4.01673 9.65204 4.37186 9.69043 4.62988C9.69153 4.63727 9.69325 4.64507 9.69434 4.65234C9.77286 5.1805 9.80834 5.41822 10.1641 5.64844C10.4307 5.82103 10.763 5.89224 11.1572 5.77637C11.5658 5.65613 12.0899 5.31884 12.6621 4.57812C13.1265 3.97713 13.7006 3.6021 14.2715 3.37695C12.8885 2.05991 11.0185 1.25 8.95801 1.25Z" fill="#989EA0"/></svg>
+    <span class="nav-label">Discover</span>
+  </div>
+
+  <!-- Activity -->
+  <div class="nav-item">
+    <div style="position:relative;display:inline-block;">
+      <svg width="18" height="17" viewBox="0 0 18 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.3369 7.64835e-07C13.4766 -1.64212e-05 14.3957 -0.000453467 15.1182 0.0966805C15.868 0.197534 16.4995 0.413627 17.001 0.91504C17.5026 1.41664 17.7185 2.04874 17.8193 2.79883C17.9164 3.52122 17.916 4.43968 17.916 5.5791V10.6709C17.916 11.8103 17.9164 12.7288 17.8193 13.4512C17.7185 14.2013 17.5026 14.8334 17.001 15.335C16.4995 15.8364 15.868 16.0525 15.1182 16.1533C14.3957 16.2505 13.4766 16.25 12.3369 16.25H2.29102C1.02552 16.2498 1.16863e-06 15.2236 1.16863e-06 13.958V8.08203C-2.33189e-05 7.3333 -0.000231119 6.70854 0.0664074 6.21289C0.136749 5.68975 0.291357 5.21743 0.6709 4.83789C1.05044 4.45835 1.52276 4.30374 2.0459 4.2334C2.40735 4.1848 2.83732 4.17152 3.33399 4.16797C3.33645 3.68027 3.34484 3.26445 3.37695 2.91016C3.42276 2.40492 3.52043 1.96351 3.75195 1.5625C4.0262 1.08753 4.42054 0.693196 4.89551 0.418946C5.29652 0.187425 5.73793 0.0897471 6.24317 0.0439461C6.73338 -0.000483863 7.34125 -6.93337e-06 8.09473 7.64835e-07H12.3369ZM3.33301 5.41797C2.85872 5.42149 2.50073 5.43302 2.21289 5.47168C1.82834 5.52338 1.66329 5.61308 1.55469 5.72168C1.44609 5.83028 1.35639 5.99533 1.30469 6.37988C1.25063 6.78237 1.25 7.32195 1.25 8.125V13.958C1.25 14.5332 1.71587 14.9998 2.29102 15C2.86631 15 3.33301 14.5333 3.33301 13.958V5.41797ZM8.125 1.25C7.33483 1.25 6.78359 1.25037 6.35645 1.28906C5.93793 1.32699 5.69958 1.39761 5.52051 1.50098C5.23547 1.66554 4.99855 1.90246 4.83399 2.1875C4.73062 2.36657 4.66 2.60492 4.62207 3.02344C4.58338 3.45058 4.58301 4.00183 4.58301 4.79199V13.958C4.58301 14.3331 4.49277 14.6875 4.33301 15H12.291C13.4872 15 14.3217 14.9987 14.9512 14.9141C15.5625 14.8319 15.8866 14.6817 16.1172 14.4512C16.3478 14.2206 16.4979 13.8964 16.5801 13.2852C16.6647 12.6557 16.666 11.8212 16.666 10.625V5.625C16.666 4.42882 16.6647 3.5943 16.5801 2.96484C16.4979 2.35356 16.3478 2.02943 16.1172 1.79883C15.8866 1.56829 15.5625 1.41813 14.9512 1.33594C14.3217 1.25132 13.4872 1.25 12.291 1.25H8.125ZM8.95801 10.833C9.30308 10.833 9.58283 11.113 9.58301 11.458C9.58301 11.8032 9.30319 12.083 8.95801 12.083H6.875C6.52982 12.083 6.25 11.8032 6.25 11.458C6.25018 11.113 6.52993 10.833 6.875 10.833H8.95801ZM14.375 10.833C14.7199 10.8332 14.9998 11.1131 15 11.458C15 11.8031 14.72 12.0828 14.375 12.083H12.291C11.946 12.0828 11.666 11.8031 11.666 11.458C11.6662 11.1131 11.9461 10.8332 12.291 10.833H14.375ZM8.95801 7.5C9.30319 7.5 9.58301 7.77982 9.58301 8.125C9.58301 8.47018 9.30319 8.75 8.95801 8.75H6.875C6.52982 8.75 6.25 8.47018 6.25 8.125C6.25 7.77982 6.52982 7.5 6.875 7.5H8.95801ZM14.375 7.5C14.72 7.50018 15 7.77993 15 8.125C15 8.47007 14.72 8.74983 14.375 8.75H12.291C11.946 8.74982 11.666 8.47007 11.666 8.125C11.666 7.77993 11.946 7.50018 12.291 7.5H14.375ZM14.375 4.16699C14.72 4.16717 15 4.44693 15 4.79199C14.9998 5.13691 14.7199 5.41682 14.375 5.41699H6.875C6.52982 5.41701 6.25002 5.13717 6.25 4.79199C6.24999 4.44682 6.52983 4.16701 6.875 4.16699H14.375Z" fill="#989EA0"/></svg>
+      <div class="badge"></div>
+    </div>
+    <span class="nav-label">Activity</span>
+  </div>
+</div>
+    </div><!-- /.screen-home -->
+
+<!-- ────────────── MF DETAIL SCREEN ────────────── -->
+<div id="screen-mf" class="screen">
+
+  <!-- Status Bar -->
+  <div class="status-bar">
+    <span>10:00</span>
+    <div class="status-icons">
+      <svg width="17" height="13" viewBox="0 0 17 13" fill="white">
+        <rect x="0"  y="6"  width="3" height="7"  rx="0.5"/>
+        <rect x="4"  y="4"  width="3" height="9"  rx="0.5"/>
+        <rect x="8"  y="2"  width="3" height="11" rx="0.5"/>
+        <rect x="12" y="0"  width="3" height="13" rx="0.5"/>
+      </svg>
+      <svg width="17" height="13" viewBox="0 0 24 18" fill="white">
+        <path d="M12 13.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3z"/>
+        <path d="M12 8.5c2.2 0 4.2.9 5.6 2.3l1.8-1.8A9.93 9.93 0 0012 6a9.93 9.93 0 00-7.4 3l1.8 1.8C7.8 9.4 9.8 8.5 12 8.5z"/>
+        <path d="M12 3C7.05 3 2.6 5.1 0 8.5l1.8 1.8C4.1 7.3 7.8 5.5 12 5.5s7.9 1.8 10.2 4.8L24 8.5C21.4 5.1 16.95 3 12 3z"/>
+      </svg>
+      <svg width="27" height="13" viewBox="0 0 27 13" fill="white">
+        <rect x="0"   y="1"   width="23" height="11" rx="2.5" stroke="white" stroke-width="1" fill="none"/>
+        <rect x="1.5" y="2.5" width="18" height="8"  rx="1.5"/>
+        <rect x="24"  y="4"   width="2.5" height="5" rx="1.2" opacity="0.5"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- MF Top Nav -->
+  <div class="mf-top-nav" style="display:flex; align-items:center; padding:10px 16px 6px; position:relative;">
+    <div class="mf-back-btn" onclick="goBack()" style="flex-shrink:0;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M15 18l-6-6 6-6"/>
+      </svg>
+    </div>
+    <div class="user-pill" style="position:absolute; left:50%; transform:translateX(-50%); margin:0; white-space:nowrap;">
+      <span class="user-name">NIKITHA K.</span>
+      <svg class="chevron" width="10" height="7" viewBox="0 0 10 7" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round">
+        <path d="M1 1l4 4 4-4"/>
+      </svg>
+    </div>
+    <div style="flex:1;"></div>
+    <!-- iter-1 / iter-2: pill toggle -->
+    <div class="w-toggle" onclick="toggleWManaged(this)" style="flex-shrink:0;">
+      <span class="w-letter">W</span>
+      <div class="toggle-track"><div class="toggle-dot"></div></div>
+    </div>
+    <!-- iter-3: eye icon in nav -->
+    <div class="mf-eye-nav eye-btn" style="width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,0.18);align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;">
+      <img src="file:///Users/pranjalsi/Downloads/claude check/bottom nav icon/Hide.png" width="22" height="22" alt="Hide">
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="mf-tabs">
+    <div class="mf-tab active" id="mf-tab-mf" onclick="switchToMFPanel()">Mutual Funds</div>
+    <div class="mf-tab" id="mf-tab-stocks" onclick="switchToStocksPanel()">Stocks &amp; ETF</div>
+    <div class="mf-tab">AIF</div>
+    <div class="mf-tab">PMS</div>
+  </div>
+
+  <div class="tab-panels-wrap">
+
+  <!-- MF Panel -->
+  <div id="panel-mf" class="tab-panel">
+
+  <!-- Summary Card -->
+  <div class="mf-summary-card">
+    <div class="mf-card-top">
+      <div>
+        <div class="mf-card-label">Current value with W</div>
+        <div class="mf-card-amount">₹13.62Cr</div>
+      </div>
+      <!-- iter-1 / iter-2: hide + dots icons -->
+      <div class="mf-card-icons">
+        <div class="mf-icon-btn" style="align-self:flex-start;">
+          <img src="file:///Users/pranjalsi/Downloads/claude check/bottom nav icon/Hide.png" width="16" height="16" alt="Hide">
+        </div>
+        <div class="mf-icon-btn" style="align-self:flex-start;">
+          <svg width="16" height="4" viewBox="0 0 20 5" fill="rgba(255,255,255,0.55)">
+            <circle cx="2.5" cy="2.5" r="2.5"/>
+            <circle cx="10" cy="2.5" r="2.5"/>
+            <circle cx="17.5" cy="2.5" r="2.5"/>
+          </svg>
+        </div>
+      </div>
+      <!-- iter-3: toggle inside card -->
+      <div class="mf-card-toggle-wrap w-toggle" onclick="toggleWManaged(this)" style="align-self:flex-start;">
+        <span class="w-letter">W</span>
+        <div class="toggle-track"><div class="toggle-dot"></div></div>
+      </div>
+    </div>
+
+    <hr class="mf-divider">
+
+    <div class="mf-metric">
+      <span class="mf-metric-label">1D returns</span>
+      <span class="mf-metric-val" style="color:#04B488;">+₹25.56L &nbsp;<span style="color:rgba(255,255,255,0.4);font-size:12px;">12.33%</span></span>
+    </div>
+    <div class="mf-metric">
+      <span class="mf-metric-label">Total returns</span>
+      <span class="mf-metric-val" style="color:#04B488;">+₹2.56L &nbsp;<span style="color:rgba(255,255,255,0.4);font-size:12px;">17.56%</span></span>
+    </div>
+    <div class="mf-metric">
+      <span class="mf-metric-label">Total invested</span>
+      <span class="mf-metric-val">₹9.09Cr</span>
+    </div>
+    <div class="mf-metric">
+      <span class="mf-metric-label">XIRR</span>
+      <span class="mf-metric-val" style="color:#04B488;">9.09%</span>
+    </div>
+  </div>
+
+  <!-- Updated notice -->
+  <div class="mf-updated">
+    <div class="mf-updated-dot">
+      <svg width="8" height="8" viewBox="0 0 10 8" fill="none">
+        <path d="M1 4l3 3 5-6" stroke="#04B488" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    Your portfolio was updated today
+  </div>
+
+  <!-- View Toggle -->
+  <div class="mf-view-toggle">
+    <button class="view-btn">Insights</button>
+    <button class="view-btn active">All holdings</button>
+  </div>
+
+  <!-- Holdings Header -->
+  <div class="holdings-hdr">
+    <span class="holdings-count">7 FUNDS</span>
+    <span class="holdings-sort">
+      Current · Invested
+      <svg width="10" height="14" viewBox="0 0 10 14" fill="none">
+        <path d="M5 1v12M2 9l3 4 3-4" stroke="rgba(255,255,255,0.45)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </span>
+  </div>
+
+  <!-- Fund list -->
+  <div class="fund-item">
+    <div class="fund-logo" style="background:#1a2e4a;">
+      <svg width="28" height="28" viewBox="0 0 28 28"><text y="20" x="4" font-size="13" font-weight="700" fill="#4EA8DE" font-family="sans-serif">ICICI</text></svg>
+    </div>
+    <div class="fund-name">ICICI Pru Smallcap Fund – Direct</div>
+    <div class="fund-amounts">
+      <div class="fund-current gain">₹3.22Cr</div>
+      <div class="fund-invested">₹2.11Cr</div>
+    </div>
+  </div>
+
+  <div class="fund-item">
+    <div class="fund-logo" style="background:#1e1a4a;">
+      <svg width="28" height="28" viewBox="0 0 28 28"><text y="20" x="5" font-size="13" font-weight="700" fill="#7B72E9" font-family="sans-serif">AXIS</text></svg>
+    </div>
+    <div class="fund-name">Axis Long Term Equity Fund – Direct</div>
+    <div class="fund-amounts">
+      <div class="fund-current gain">₹1.89Cr</div>
+      <div class="fund-invested">₹1.31Cr</div>
+    </div>
+  </div>
+
+  <div class="fund-item">
+    <div class="fund-logo" style="background:#1a3a2a;">
+      <svg width="28" height="28" viewBox="0 0 28 28"><text y="20" x="4" font-size="12" font-weight="700" fill="#04B488" font-family="sans-serif">MIR</text></svg>
+    </div>
+    <div class="fund-name">Mirae Asset Emerging Bluechip – Direct</div>
+    <div class="fund-amounts">
+      <div class="fund-current gain">₹1.54Cr</div>
+      <div class="fund-invested">₹1.08Cr</div>
+    </div>
+  </div>
+
+  <div class="fund-item">
+    <div class="fund-logo" style="background:#2a1e14;">
+      <svg width="28" height="28" viewBox="0 0 28 28"><text y="20" x="3" font-size="11" font-weight="700" fill="#FF8C42" font-family="sans-serif">KOT</text></svg>
+    </div>
+    <div class="fund-name">Kotak Flexi Cap Fund – Direct</div>
+    <div class="fund-amounts">
+      <div class="fund-current loss">₹2.44Cr</div>
+      <div class="fund-invested">₹2.62Cr</div>
+    </div>
+  </div>
+
+  <div class="fund-item">
+    <div class="fund-logo" style="background:#1a2a1e;">
+      <svg width="28" height="28" viewBox="0 0 28 28"><text y="20" x="6" font-size="14" font-weight="700" fill="#74C291" font-family="sans-serif">SBI</text></svg>
+    </div>
+    <div class="fund-name">SBI Bluechip Fund – Direct Plan</div>
+    <div class="fund-amounts">
+      <div class="fund-current gain">₹1.67Cr</div>
+      <div class="fund-invested">₹1.24Cr</div>
+    </div>
+  </div>
+
+  <div class="fund-item">
+    <div class="fund-logo" style="background:#1e2a3a;">
+      <svg width="28" height="28" viewBox="0 0 28 28"><text y="20" x="4" font-size="12" font-weight="700" fill="#5BA3D9" font-family="sans-serif">DSP</text></svg>
+    </div>
+    <div class="fund-name">DSP Mid Cap Fund – Direct Plan</div>
+    <div class="fund-amounts">
+      <div class="fund-current gain">₹1.82Cr</div>
+      <div class="fund-invested">₹1.34Cr</div>
+    </div>
+  </div>
+
+  <div class="fund-item">
+    <div class="fund-logo" style="background:#2a1e2a;">
+      <svg width="28" height="28" viewBox="0 0 28 28"><text y="20" x="4" font-size="12" font-weight="700" fill="#C07FC0" font-family="sans-serif">PP</text></svg>
+    </div>
+    <div class="fund-name">Parag Parikh Flexi Cap Fund – Direct</div>
+    <div class="fund-amounts">
+      <div class="fund-current gain">₹1.04Cr</div>
+      <div class="fund-invested">₹0.83Cr</div>
+    </div>
+  </div>
+
+  <div class="mf-bottom-pad"></div>
+
+  </div><!-- /#panel-mf -->
+
+  <!-- Stocks Panel -->
+  <div id="panel-stocks" class="tab-panel">
+
+  <!-- Summary Card -->
+  <div class="mf-summary-card">
+    <div class="mf-card-top">
+      <div>
+        <div class="mf-card-label">Current value</div>
+        <div class="mf-card-amount">₹23.92Cr</div>
+      </div>
+      <div class="mf-card-icons">
+        <div class="mf-icon-btn" style="align-self:flex-start;">
+          <img src="file:///Users/pranjalsi/Downloads/claude check/bottom nav icon/Hide.png" width="16" height="16" alt="Hide">
+        </div>
+        <div class="mf-icon-btn" style="align-self:flex-start;">
+          <svg width="16" height="4" viewBox="0 0 20 5" fill="rgba(255,255,255,0.55)">
+            <circle cx="2.5" cy="2.5" r="2.5"/>
+            <circle cx="10" cy="2.5" r="2.5"/>
+            <circle cx="17.5" cy="2.5" r="2.5"/>
+          </svg>
+        </div>
+      </div>
+      <div class="mf-card-toggle-wrap w-toggle" onclick="toggleWManaged(this)" style="align-self:flex-start;">
+        <span class="w-letter">W</span>
+        <div class="toggle-track"><div class="toggle-dot"></div></div>
+      </div>
+    </div>
+
+    <hr class="mf-divider">
+
+    <div class="mf-metric">
+      <span class="mf-metric-label">1D returns</span>
+      <span class="mf-metric-val" style="color:#04B488;">+₹10.54L &nbsp;<span style="color:rgba(255,255,255,0.4);font-size:12px;">4.60%</span></span>
+    </div>
+    <div class="mf-metric">
+      <span class="mf-metric-label">Total returns</span>
+      <span class="mf-metric-val" style="color:#04B488;">+₹8.34Cr &nbsp;<span style="color:rgba(255,255,255,0.4);font-size:12px;">53.49%</span></span>
+    </div>
+    <div class="mf-metric">
+      <span class="mf-metric-label">Total invested</span>
+      <span class="mf-metric-val">₹15.58Cr</span>
+    </div>
+    <div class="mf-metric">
+      <span class="mf-metric-label">XIRR</span>
+      <span class="mf-metric-val" style="color:#04B488;">18.42%</span>
+    </div>
+  </div>
+
+  <!-- Updated notice -->
+  <div class="mf-updated">
+    <div class="mf-updated-dot">
+      <svg width="8" height="8" viewBox="0 0 10 8" fill="none">
+        <path d="M1 4l3 3 5-6" stroke="#04B488" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    Prices updated as of today, 3:30 PM
+  </div>
+
+  <!-- View Toggle -->
+  <div class="mf-view-toggle">
+    <button class="view-btn">Insights</button>
+    <button class="view-btn active">All holdings</button>
+  </div>
+
+  <!-- Scrollable content -->
+  <div class="stocks-scroll">
+
+    <!-- Portfolio Composition -->
+    <div class="stocks-comp-card">
+      <div class="stocks-comp-title">PORTFOLIO COMPOSITION</div>
+      <div class="stocks-bar-wrap">
+        <div style="flex:68.16; background:#4DA4DD; border-radius:5px 0 0 5px;"></div>
+        <div style="flex:31.84; background:#7A7AC6; border-radius:0 5px 5px 0;"></div>
+      </div>
+      <div class="stocks-comp-row">
+        <div class="stocks-comp-dot" style="background:#4DA4DD;"></div>
+        <span>Stocks</span>
+        <span style="color:rgba(255,255,255,0.35); font-size:11px; margin-left:4px;">68.16%</span>
+        <span class="stocks-comp-amount">₹16.30Cr</span>
+      </div>
+      <div class="stocks-comp-row">
+        <div class="stocks-comp-dot" style="background:#7A7AC6;"></div>
+        <span>ETFs</span>
+        <span style="color:rgba(255,255,255,0.35); font-size:11px; margin-left:4px;">31.84%</span>
+        <span class="stocks-comp-amount">₹7.62Cr</span>
+      </div>
+    </div>
+
+    <!-- Holdings list -->
+    <div class="stocks-section-title">Holdings (24)</div>
+
+    <div class="fund-item">
+      <div class="fund-logo" style="background:#1a2e4a;">
+        <svg width="28" height="28" viewBox="0 0 28 28"><text y="20" x="3" font-size="11" font-weight="700" fill="#4DA4DD" font-family="sans-serif">RELK</text></svg>
+      </div>
+      <div class="fund-name">Reliance Industries Ltd</div>
+      <div class="fund-amounts">
+        <div class="fund-current gain">₹3.84Cr</div>
+        <div class="fund-invested">₹2.40Cr</div>
+      </div>
+    </div>
+
+    <div class="fund-item">
+      <div class="fund-logo" style="background:#1e2a1e;">
+        <svg width="28" height="28" viewBox="0 0 28 28"><text y="20" x="5" font-size="12" font-weight="700" fill="#04B488" font-family="sans-serif">INFY</text></svg>
+      </div>
+      <div class="fund-name">Infosys Ltd</div>
+      <div class="fund-amounts">
+        <div class="fund-current gain">₹2.61Cr</div>
+        <div class="fund-invested">₹1.88Cr</div>
+      </div>
+    </div>
+
+    <div class="fund-item">
+      <div class="fund-logo" style="background:#2a1a1a;">
+        <svg width="28" height="28" viewBox="0 0 28 28"><text y="20" x="6" font-size="12" font-weight="700" fill="#FF8C42" font-family="sans-serif">TCS</text></svg>
+      </div>
+      <div class="fund-name">Tata Consultancy Services</div>
+      <div class="fund-amounts">
+        <div class="fund-current gain">₹2.12Cr</div>
+        <div class="fund-invested">₹1.72Cr</div>
+      </div>
+    </div>
+
+    <div class="fund-item">
+      <div class="fund-logo" style="background:#1a1a2e;">
+        <svg width="28" height="28" viewBox="0 0 28 28"><text y="20" x="3" font-size="11" font-weight="700" fill="#7A7AC6" font-family="sans-serif">HDFB</text></svg>
+      </div>
+      <div class="fund-name">HDFC Bank Ltd</div>
+      <div class="fund-amounts">
+        <div class="fund-current loss">₹1.88Cr</div>
+        <div class="fund-invested">₹2.05Cr</div>
+      </div>
+    </div>
+
+    <div class="fund-item">
+      <div class="fund-logo" style="background:#1a2e2e;">
+        <svg width="28" height="28" viewBox="0 0 28 28"><text y="20" x="4" font-size="12" font-weight="700" fill="#4DA4DD" font-family="sans-serif">NIFY</text></svg>
+      </div>
+      <div class="fund-name">Nippon Nifty 50 ETF</div>
+      <div class="fund-amounts">
+        <div class="fund-current gain">₹4.22Cr</div>
+        <div class="fund-invested">₹2.90Cr</div>
+      </div>
+    </div>
+
+    <div class="fund-item">
+      <div class="fund-logo" style="background:#2e1a2e;">
+        <svg width="28" height="28" viewBox="0 0 28 28"><text y="20" x="5" font-size="12" font-weight="700" fill="#C07FC0" font-family="sans-serif">BSEL</text></svg>
+      </div>
+      <div class="fund-name">BSE Sensex ETF</div>
+      <div class="fund-amounts">
+        <div class="fund-current gain">₹3.40Cr</div>
+        <div class="fund-invested">₹2.18Cr</div>
+      </div>
+    </div>
+
+    <div class="mf-bottom-pad"></div>
+  </div>
+
+  </div><!-- /#panel-stocks -->
+
+  </div><!-- /.tab-panels-wrap -->
+
+  <!-- Bottom Navigation (same as home) -->
+  <div class="bottom-nav">
+    <div class="nav-item active">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path opacity="0.4" d="M0.917826 9.96954C0.623643 8.0552 0.476551 7.09803 0.838471 6.24948C1.20039 5.40093 2.00335 4.82036 3.60928 3.65922L4.80916 2.79167C6.80691 1.34722 7.80578 0.625 8.95833 0.625C10.1109 0.625 11.1098 1.34722 13.1075 2.79167L14.3074 3.65922C15.9133 4.82036 16.7163 5.40093 17.0782 6.24948C17.4401 7.09803 17.293 8.0552 16.9988 9.96954L16.748 11.602C16.3309 14.3158 16.1224 15.6727 15.1492 16.4822C14.1759 17.2917 12.7531 17.2917 9.90734 17.2917H8.00932C5.16361 17.2917 3.74076 17.2917 2.7675 16.4822C1.79424 15.6727 1.58572 14.3158 1.16869 11.602L0.917826 9.96954Z" fill="#C7A865"/><path d="M8.95801 0C9.67963 0 10.325 0.230306 11.0215 0.621094C11.6964 0.999835 12.4699 1.55953 13.4424 2.2627L14.7002 3.17188C15.4805 3.73608 16.1041 4.18641 16.5742 4.60352C17.0597 5.03423 17.423 5.4638 17.6533 6.00391C17.8841 6.54503 17.9401 7.09981 17.9092 7.73926C17.8793 8.35649 17.7648 9.1017 17.6221 10.0303L17.3594 11.7402C17.1566 13.0599 16.995 14.111 16.7578 14.9297C16.5125 15.7762 16.1664 16.4482 15.5488 16.9619C14.9337 17.4736 14.2008 17.7018 13.3057 17.8105C12.4349 17.9163 11.3366 17.916 9.94922 17.916H7.96777C6.58032 17.916 5.48114 17.9163 4.61035 17.8105C3.71544 17.7018 2.9832 17.4735 2.36817 16.9619C1.75046 16.4481 1.40451 15.7763 1.15918 14.9297C0.921943 14.1109 0.760421 13.06 0.557619 11.7402L0.294923 10.0303C0.152212 9.10167 0.0376978 8.35651 0.00781387 7.73926C-0.0231058 7.09977 0.0328604 6.54506 0.263673 6.00391C0.494043 5.46384 0.857354 5.03421 1.34277 4.60352C1.8129 4.18643 2.43649 3.73605 3.2168 3.17188L4.47363 2.2627C5.44609 1.55956 6.21963 0.999833 6.89453 0.621094C7.59102 0.230253 8.23638 5.13139e-05 8.95801 0ZM8.95801 1.25C8.52738 1.25005 8.09694 1.37986 7.50684 1.71094C6.90193 2.05039 6.18543 2.56714 5.17481 3.29785L3.97559 4.16504C3.16254 4.7529 2.58984 5.16822 2.17188 5.53906C1.76411 5.90089 1.54462 6.18582 1.41309 6.49414C1.28204 6.8014 1.23022 7.15007 1.25586 7.67969C1.28225 8.22414 1.38616 8.90445 1.53516 9.87402L1.78613 11.5068C1.99719 12.8802 2.14741 13.8505 2.35938 14.582C2.56584 15.2945 2.81157 15.7053 3.16699 16.001C3.52511 16.2988 3.99068 16.4757 4.76172 16.5693C5.54829 16.6649 6.5706 16.666 8.00879 16.666H9.90723C11.3457 16.666 12.3686 16.6649 13.1553 16.5693C13.9261 16.4757 14.391 16.2988 14.749 16.001C15.1045 15.7053 15.3501 15.2946 15.5566 14.582C15.7686 13.8506 15.9188 12.8802 16.1299 11.5068L16.3809 9.87402C16.5299 8.90443 16.6338 8.22415 16.6602 7.67969C16.6858 7.15007 16.634 6.8014 16.5029 6.49414C16.3714 6.18582 16.152 5.90094 15.7441 5.53906C15.3262 5.16823 14.7544 4.75289 13.9414 4.16504L12.7412 3.29785C11.7306 2.56714 11.0151 2.05039 10.4102 1.71094C9.81976 1.37964 9.38881 1.25 8.95801 1.25ZM11.0742 12.6318C11.3466 12.4198 11.7391 12.4688 11.9512 12.7412C12.1631 13.0136 12.1141 13.4062 11.8418 13.6182C11.0639 14.2236 10.0529 14.583 8.95801 14.583C7.86306 14.583 6.85214 14.2237 6.07422 13.6182C5.80197 13.4062 5.75317 13.0136 5.96485 12.7412C6.17686 12.4688 6.56942 12.4198 6.8418 12.6318C7.39629 13.0635 8.13611 13.333 8.95801 13.333C9.77988 13.333 10.5197 13.0634 11.0742 12.6318Z" fill="#C7A865"/></svg>
+      <span class="nav-label">Wealth</span>
+    </div>
+    <div class="nav-item">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8.95801 0C13.9055 1.12753e-07 17.916 4.01045 17.916 8.95801C17.916 9.30319 17.6362 9.58301 17.291 9.58301C16.946 9.58283 16.666 9.30308 16.666 8.95801C16.666 7.25378 16.1122 5.67951 15.1758 4.40332C14.6332 4.52573 14.0685 4.80287 13.6514 5.34277C12.9741 6.21937 12.2475 6.75875 11.5107 6.97559C10.7598 7.19656 10.0506 7.0647 9.48438 6.69824C8.64611 6.15562 8.53773 5.39696 8.4668 4.90039C8.46257 4.87077 8.45822 4.84211 8.4541 4.81445C8.41551 4.55509 8.38121 4.39854 8.31152 4.26953C8.25341 4.16202 8.14747 4.03279 7.88477 3.90527C7.19613 3.57083 6.82059 2.94901 6.70605 2.28906C6.6666 2.06158 6.65836 1.82718 6.67676 1.59277C3.86453 2.46283 1.74162 4.89944 1.3252 7.88281C1.84991 8.26746 2.49023 8.55653 3.19824 8.55664C3.75333 8.55664 4.23201 8.58294 4.63379 8.6582C5.03649 8.73364 5.40665 8.86634 5.70703 9.1123C6.3319 9.62421 6.42381 10.4259 6.42383 11.251C6.42383 12.1001 6.42511 12.4578 6.4707 12.7627C6.51437 13.0547 6.59893 13.3051 6.82129 13.9424C7.07316 14.6643 7.24245 15.5422 6.84082 16.3691C7.51375 16.561 8.22351 16.666 8.95801 16.666C9.30308 16.666 9.58283 16.946 9.58301 17.291C9.58301 17.6362 9.30319 17.916 8.95801 17.916C4.01045 17.916 1.1275e-07 13.9055 0 8.95801C0 4.01045 4.01045 0 8.95801 0ZM13.1699 9.16602C15.3797 9.16608 17.1729 10.9547 17.1729 13.1631C17.1728 14.0493 16.8842 14.8678 16.3955 15.5303L17.7305 16.8467C17.9759 17.089 17.9785 17.4848 17.7363 17.7305C17.494 17.976 17.0983 17.9786 16.8525 17.7363L15.5059 16.4092C14.8483 16.8815 14.0414 17.1592 13.1699 17.1592C10.9601 17.1592 9.16609 15.3715 9.16602 13.1631C9.16602 10.9546 10.9601 9.16602 13.1699 9.16602ZM1.25781 9.31152C1.38989 12.2374 3.15351 14.7373 5.66016 15.9258C5.90757 15.5198 5.87656 15.0279 5.6416 14.3545C5.636 14.3384 5.63049 14.3224 5.625 14.3066C5.42393 13.7306 5.29729 13.368 5.23438 12.9473C5.17333 12.5388 5.17379 12.082 5.17383 11.3135C5.17383 11.2931 5.17383 11.2718 5.17383 11.251C5.17381 10.4209 5.04804 10.1881 4.91504 10.0791C4.83629 10.0146 4.69116 9.94064 4.40332 9.88672C4.11459 9.83267 3.72615 9.80664 3.19824 9.80664C2.46888 9.80656 1.81521 9.60202 1.25781 9.31152ZM13.1699 10.416C11.648 10.416 10.416 11.6474 10.416 13.1631C10.4161 14.6787 11.6481 15.9092 13.1699 15.9092C13.9237 15.9091 14.6066 15.6071 15.1035 15.1182C15.6096 14.62 15.9228 13.9278 15.9229 13.1631C15.9229 11.6474 14.6918 10.4161 13.1699 10.416ZM8.95801 1.25C8.63116 1.25 8.30931 1.27204 7.99316 1.31152C7.91552 1.57796 7.89734 1.84361 7.9375 2.0752C7.99559 2.41014 8.16398 2.65173 8.43066 2.78125C8.9012 3.00964 9.21461 3.31128 9.41113 3.6748C9.59595 4.01673 9.65204 4.37186 9.69043 4.62988C9.69153 4.63727 9.69325 4.64507 9.69434 4.65234C9.77286 5.1805 9.80834 5.41822 10.1641 5.64844C10.4307 5.82103 10.763 5.89224 11.1572 5.77637C11.5658 5.65613 12.0899 5.31884 12.6621 4.57812C13.1265 3.97713 13.7006 3.6021 14.2715 3.37695C12.8885 2.05991 11.0185 1.25 8.95801 1.25Z" fill="#989EA0"/></svg>
+      <span class="nav-label">Discover</span>
+    </div>
+    <div class="nav-item">
+      <div style="position:relative;display:inline-block;">
+        <svg width="18" height="17" viewBox="0 0 18 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.3369 7.64835e-07C13.4766 -1.64212e-05 14.3957 -0.000453467 15.1182 0.0966805C15.868 0.197534 16.4995 0.413627 17.001 0.91504C17.5026 1.41664 17.7185 2.04874 17.8193 2.79883C17.9164 3.52122 17.916 4.43968 17.916 5.5791V10.6709C17.916 11.8103 17.9164 12.7288 17.8193 13.4512C17.7185 14.2013 17.5026 14.8334 17.001 15.335C16.4995 15.8364 15.868 16.0525 15.1182 16.1533C14.3957 16.2505 13.4766 16.25 12.3369 16.25H2.29102C1.02552 16.2498 1.16863e-06 15.2236 1.16863e-06 13.958V8.08203C-2.33189e-05 7.3333 -0.000231119 6.70854 0.0664074 6.21289C0.136749 5.68975 0.291357 5.21743 0.6709 4.83789C1.05044 4.45835 1.52276 4.30374 2.0459 4.2334C2.40735 4.1848 2.83732 4.17152 3.33399 4.16797C3.33645 3.68027 3.34484 3.26445 3.37695 2.91016C3.42276 2.40492 3.52043 1.96351 3.75195 1.5625C4.0262 1.08753 4.42054 0.693196 4.89551 0.418946C5.29652 0.187425 5.73793 0.0897471 6.24317 0.0439461C6.73338 -0.000483863 7.34125 -6.93337e-06 8.09473 7.64835e-07H12.3369ZM3.33301 5.41797C2.85872 5.42149 2.50073 5.43302 2.21289 5.47168C1.82834 5.52338 1.66329 5.61308 1.55469 5.72168C1.44609 5.83028 1.35639 5.99533 1.30469 6.37988C1.25063 6.78237 1.25 7.32195 1.25 8.125V13.958C1.25 14.5332 1.71587 14.9998 2.29102 15C2.86631 15 3.33301 14.5333 3.33301 13.958V5.41797ZM8.125 1.25C7.33483 1.25 6.78359 1.25037 6.35645 1.28906C5.93793 1.32699 5.69958 1.39761 5.52051 1.50098C5.23547 1.66554 4.99855 1.90246 4.83399 2.1875C4.73062 2.36657 4.66 2.60492 4.62207 3.02344C4.58338 3.45058 4.58301 4.00183 4.58301 4.79199V13.958C4.58301 14.3331 4.49277 14.6875 4.33301 15H12.291C13.4872 15 14.3217 14.9987 14.9512 14.9141C15.5625 14.8319 15.8866 14.6817 16.1172 14.4512C16.3478 14.2206 16.4979 13.8964 16.5801 13.2852C16.6647 12.6557 16.666 11.8212 16.666 10.625V5.625C16.666 4.42882 16.6647 3.5943 16.5801 2.96484C16.4979 2.35356 16.3478 2.02943 16.1172 1.79883C15.8866 1.56829 15.5625 1.41813 14.9512 1.33594C14.3217 1.25132 13.4872 1.25 12.291 1.25H8.125ZM8.95801 10.833C9.30308 10.833 9.58283 11.113 9.58301 11.458C9.58301 11.8032 9.30319 12.083 8.95801 12.083H6.875C6.52982 12.083 6.25 11.8032 6.25 11.458C6.25018 11.113 6.52993 10.833 6.875 10.833H8.95801ZM14.375 10.833C14.7199 10.8332 14.9998 11.1131 15 11.458C15 11.8031 14.72 12.0828 14.375 12.083H12.291C11.946 12.0828 11.666 11.8031 11.666 11.458C11.6662 11.1131 11.9461 10.8332 12.291 10.833H14.375ZM8.95801 7.5C9.30319 7.5 9.58301 7.77982 9.58301 8.125C9.58301 8.47018 9.30319 8.75 8.95801 8.75H6.875C6.52982 8.75 6.25 8.47018 6.25 8.125C6.25 7.77982 6.52982 7.5 6.875 7.5H8.95801ZM14.375 7.5C14.72 7.50018 15 7.77993 15 8.125C15 8.47007 14.72 8.74983 14.375 8.75H12.291C11.946 8.74982 11.666 8.47007 11.666 8.125C11.666 7.77993 11.946 7.50018 12.291 7.5H14.375ZM14.375 4.16699C14.72 4.16717 15 4.44693 15 4.79199C14.9998 5.13691 14.7199 5.41682 14.375 5.41699H6.875C6.52982 5.41701 6.25002 5.13717 6.25 4.79199C6.24999 4.44682 6.52983 4.16701 6.875 4.16699H14.375Z" fill="#989EA0"/></svg>
+        <div class="badge"></div>
+      </div>
+      <span class="nav-label">Activity</span>
+    </div>
+  </div>
+
+</div><!-- /.screen-mf -->
+
+    </div><!-- /.app-content -->
+  </div><!-- /.device-screen -->
+</div><!-- /.device-shell -->
+
+<!-- Iterations Panel (always open) -->
+<div id="iter-panel">
+  <div class="iter-panel-hdr">
+    <span class="iter-panel-title">Iterations</span>
+  </div>
+  <div class="iter-list">
+
+    <div class="iter-item active" onclick="switchIter(1)">
+      <div class="iter-badge">1</div>
+      <div class="iter-info">
+        <div class="iter-name">W Managed Dashboard</div>
+        <div class="iter-tag">Pill toggle</div>
+      </div>
+    </div>
+
+    <div class="iter-item" onclick="switchIter(2)">
+      <div class="iter-badge">2</div>
+      <div class="iter-info">
+        <div class="iter-name">Circular W Button</div>
+        <div class="iter-tag">Ring variant</div>
+      </div>
+    </div>
+
+    <div class="iter-item" onclick="switchIter(3)">
+      <div class="iter-badge">3</div>
+      <div class="iter-info">
+        <div class="iter-name">Toggle Relocated</div>
+        <div class="iter-tag">In-context toggle</div>
+      </div>
+    </div>
+    <div class="iter-item" onclick="switchIter(4)">
+      <div class="iter-badge">4</div>
+      <div class="iter-info">
+        <div class="iter-name">Loading State</div>
+        <div class="iter-tag">Skeleton screen</div>
+      </div>
+    </div>
+    <div class="iter-item" onclick="switchIter(5)">
+      <div class="iter-badge">5</div>
+      <div class="iter-info">
+        <div class="iter-name">Chart Loader</div>
+        <div class="iter-tag">API delay on chart only</div>
+      </div>
+    </div>
+    <div class="iter-item" onclick="switchIter(6)">
+      <div class="iter-badge">6</div>
+      <div class="iter-info">
+        <div class="iter-name">Assets Toggle</div>
+        <div class="iter-tag">Toggle beside All Assets</div>
+      </div>
+    </div>
+    <div class="iter-item" onclick="switchIter(7)">
+      <div class="iter-badge">7</div>
+      <div class="iter-info">
+        <div class="iter-name">Gold → Grey → Settle</div>
+        <div class="iter-tag">Chart fades then settles</div>
+      </div>
+    </div>
+    <div class="iter-item" onclick="switchIter(8)">
+      <div class="iter-badge">8</div>
+      <div class="iter-info">
+        <div class="iter-name">Toggle Everywhere</div>
+        <div class="iter-tag">Home + inside pages</div>
+      </div>
+    </div>
+    <div class="iter-item" onclick="switchIter(9)">
+      <div class="iter-badge">9</div>
+      <div class="iter-info">
+        <div class="iter-name">White Glow → Gold Sweep</div>
+        <div class="iter-tag">Blink white, sweep gold</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Simulation panel -->
+<div id="sim-panel">
+  <div class="sim-hdr">
+    <div class="sim-title">Simulate</div>
+    <div class="sim-subtitle">Iter 5 & 7 · chart load</div>
+  </div>
+  <div class="sim-body">
+
+    <div>
+      <div class="sim-section-label">Internet Speed</div>
+      <div class="sim-speed-btns">
+        <button class="sim-speed-btn" onclick="setLoadTime(300, this)">
+          Best <span class="sim-speed-time">0.3s</span>
+        </button>
+        <button class="sim-speed-btn active" onclick="setLoadTime(1500, this)">
+          Mid <span class="sim-speed-time">1.5s</span>
+        </button>
+        <button class="sim-speed-btn" onclick="setLoadTime(3500, this)">
+          Worst <span class="sim-speed-time">3.5s</span>
+        </button>
+      </div>
+    </div>
+
+    <div>
+      <div class="sim-section-label">Current State</div>
+      <div class="sim-state">
+        <div class="sim-state-dot" id="sim-dot"></div>
+        <span class="sim-state-text" id="sim-state-text">W Off</span>
+      </div>
+    </div>
+
+    <button class="sim-fire-btn" onclick="simFire()">Fire →</button>
+
+  </div>
+</div>
+<script>
+/* Simulated data load delay for iter-5; default = mid (1500ms) */
+let chartLoadMs = 1500;
+
+window.setLoadTime = function (ms, btn) {
+  chartLoadMs = ms;
+  document.querySelectorAll('.sim-speed-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+};
+
+function updateSimState() {
+  const on  = document.querySelector('.w-toggle') &&
+               document.querySelector('.w-toggle').classList.contains('on');
+  const dot  = document.getElementById('sim-dot');
+  const text = document.getElementById('sim-state-text');
+  if (!dot) return;
+  dot.classList.toggle('on', !!on);
+  text.textContent = on ? 'W On' : 'W Off';
+}
+
+window.simFire = function () {
+  const btn = document.querySelector('#screen-home .w-toggle');
+  if (btn) { toggleWManaged(btn); updateSimState(); }
+};
+
+(function () {
+  /* ── Values (units: ₹0.01 Cr = 1 unit) ──
+     OFF = stocks visible  → full net worth ₹37.53 Cr
+     ON  = stocks hidden   → without stocks ₹13.61 Cr          */
+  const NW_OFF  = 3753,  NW_ON  = 1361;
+  /* nw-sub day change: OFF = +₹13.82L, ON = +₹3.28L (minus stocks +₹10.54L) */
+  const SUB_OFF = 1382,  SUB_ON =  328;
+
+  /* Per-card amounts (hundredths of their unit):
+     MF  ₹13.61 Cr → same when stocks hidden (card is still shown)
+     AIF ₹2.45  Cr
+     PMS ₹51.29 L
+     Each entry: [selector, offVal, onVal, prefix, suffix, decimals] */
+  const CARDS = [
+    ['.card-mutual  .card-amount', 3542, 2107, '₹', 'L',  2],
+    ['.card-aif     .card-amount',  245,  192, '₹', 'Cr', 2],
+    ['.card-pms     .card-amount', 5129, 3847, '₹', 'L',  2],
+  ];
+
+  let nwRaf = null;
+
+  function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+
+  /* ── Precompute chart path points for iter-7 morph (done once at load) ── */
+  const ITER7_N = 180;
+  const iter7PtsFull = [], iter7PtsW = [];
+  (function precomputeIter7Paths() {
+    const lineFull = document.getElementById('line-full');
+    const lineW    = document.getElementById('line-w');
+    if (!lineFull || !lineW) return;
+    const lenFull = lineFull.getTotalLength();
+    const lenW    = lineW.getTotalLength();
+    for (let i = 0; i <= ITER7_N; i++) {
+      const fpt = lineFull.getPointAtLength((i / ITER7_N) * lenFull);
+      const wpt = lineW.getPointAtLength((i / ITER7_N) * lenW);
+      iter7PtsFull.push({ x: fpt.x, y: fpt.y });
+      iter7PtsW.push({ x: wpt.x, y: wpt.y });
+    }
+  })();
+
+
+  /* ── Chart skeleton: animated gold wave ── */
+  let skelRaf = null;
+
+  function startSkeletonAnim() {
+    const canvas = document.getElementById('chart-skel-canvas');
+    const ctx    = canvas.getContext('2d');
+    const W = 360, H = 141;
+    const isIter2 = document.body.classList.contains('iter-2');
+
+    if (isIter2) {
+      /* ── Simple version: single dot sweeps across a baseline ── */
+      const lineY  = 82;
+      const startT = performance.now();
+      const dur    = 400;
+
+      function frameSingle(now) {
+        const p = Math.min((now - startT) / dur, 1);
+        ctx.clearRect(0, 0, W, H);
+
+        /* baseline */
+        ctx.beginPath();
+        ctx.moveTo(0, lineY); ctx.lineTo(W, lineY);
+        ctx.strokeStyle = 'rgba(199,168,101,0.15)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        /* travelled trail */
+        const trailGrad = ctx.createLinearGradient(0, 0, p * W, 0);
+        trailGrad.addColorStop(0,   'rgba(199,168,101,0)');
+        trailGrad.addColorStop(0.6, 'rgba(199,168,101,0.12)');
+        trailGrad.addColorStop(1,   'rgba(199,168,101,0.25)');
+        ctx.beginPath();
+        ctx.moveTo(0, lineY); ctx.lineTo(p * W, lineY);
+        ctx.strokeStyle = trailGrad;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        /* glowing dot */
+        const dotX = p * W;
+        const rg = ctx.createRadialGradient(dotX, lineY, 0, dotX, lineY, 10);
+        rg.addColorStop(0,   'rgba(255,232,140,1)');
+        rg.addColorStop(0.3, 'rgba(199,168,101,0.6)');
+        rg.addColorStop(1,   'rgba(199,168,101,0)');
+        ctx.beginPath();
+        ctx.arc(dotX, lineY, 10, 0, Math.PI * 2);
+        ctx.fillStyle = rg;
+        ctx.fill();
+
+        if (p < 1) skelRaf = requestAnimationFrame(frameSingle);
+      }
+      skelRaf = requestAnimationFrame(frameSingle);
+      return;
+    }
+
+    /* ── Full wave version (iter-1 / iter-3) ── */
+    function getY(x, t) {
+      return 78
+        - 20 * Math.sin(0.033 * x + t * 2.2)
+        -  8 * Math.sin(0.075 * x + t * 3.8)
+        -  4 * Math.sin(0.14  * x - t * 1.6);
+    }
+
+    function frame(now) {
+      const t = now / 1000;
+      ctx.clearRect(0, 0, W, H);
+
+      ctx.beginPath();
+      ctx.moveTo(0, getY(0, t));
+      for (let x = 1; x <= W; x++) ctx.lineTo(x, getY(x, t));
+      ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.closePath();
+      const fill = ctx.createLinearGradient(0, 20, 0, H);
+      fill.addColorStop(0, 'rgba(199,168,101,0.13)');
+      fill.addColorStop(1, 'rgba(199,168,101,0)');
+      ctx.fillStyle = fill;
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.moveTo(0, getY(0, t));
+      for (let x = 1; x <= W; x++) ctx.lineTo(x, getY(x, t));
+      ctx.strokeStyle = 'rgba(199,168,101,0.25)';
+      ctx.lineWidth   = 5;
+      ctx.lineJoin    = 'round';
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(0, getY(0, t));
+      for (let x = 1; x <= W; x++) ctx.lineTo(x, getY(x, t));
+      ctx.strokeStyle = 'rgba(199,168,101,0.75)';
+      ctx.lineWidth   = 1.5;
+      ctx.stroke();
+
+      const dotX = ((now / 8) % (W + 40)) - 20;
+      const dotY = getY(Math.max(0, Math.min(W, dotX)), t);
+      if (dotX >= 0 && dotX <= W) {
+        const rg = ctx.createRadialGradient(dotX, dotY, 0, dotX, dotY, 7);
+        rg.addColorStop(0, 'rgba(255,232,140,0.95)');
+        rg.addColorStop(1, 'rgba(199,168,101,0)');
+        ctx.beginPath();
+        ctx.arc(dotX, dotY, 7, 0, Math.PI * 2);
+        ctx.fillStyle = rg;
+        ctx.fill();
+      }
+
+      skelRaf = requestAnimationFrame(frame);
+    }
+    skelRaf = requestAnimationFrame(frame);
+  }
+
+  function stopSkeletonAnim() {
+    if (skelRaf) { cancelAnimationFrame(skelRaf); skelRaf = null; }
+  }
+
+  let skel4Raf = null;
+  function startSkel4Anim() {
+    const canvas = document.getElementById('skel4-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const W = 360, H = 141;
+    function getY(x, t) {
+      return 78 - 20*Math.sin(0.033*x + t*2.2) - 8*Math.sin(0.075*x + t*3.8) - 4*Math.sin(0.14*x - t*1.6);
+    }
+    function frame(now) {
+      const t = now / 1000;
+      ctx.clearRect(0, 0, W, H);
+      /* gradient fill */
+      const fill = ctx.createLinearGradient(0, 0, 0, H);
+      fill.addColorStop(0, 'rgba(199,168,101,0.10)');
+      fill.addColorStop(1, 'rgba(199,168,101,0)');
+      ctx.beginPath();
+      ctx.moveTo(0, H);
+      for (let x = 0; x <= W; x++) ctx.lineTo(x, getY(x, t));
+      ctx.lineTo(W, H);
+      ctx.closePath();
+      ctx.fillStyle = fill;
+      ctx.fill();
+      /* wave line */
+      ctx.shadowColor = 'rgba(199,168,101,0.5)';
+      ctx.shadowBlur  = 8;
+      ctx.strokeStyle = 'rgba(199,168,101,0.55)';
+      ctx.lineWidth   = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(0, getY(0, t));
+      for (let x = 1; x <= W; x++) ctx.lineTo(x, getY(x, t));
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+      /* travelling dot */
+      const dotX = ((t * 40) % W + W) % W;
+      const dotY = getY(dotX, t);
+      const radial = ctx.createRadialGradient(dotX, dotY, 0, dotX, dotY, 6);
+      radial.addColorStop(0,   'rgba(255,248,210,0.95)');
+      radial.addColorStop(0.4, 'rgba(255,221,141,0.7)');
+      radial.addColorStop(1,   'rgba(199,168,101,0)');
+      ctx.fillStyle = radial;
+      ctx.beginPath();
+      ctx.arc(dotX, dotY, 6, 0, Math.PI * 2);
+      ctx.fill();
+      skel4Raf = requestAnimationFrame(frame);
+    }
+    skel4Raf = requestAnimationFrame(frame);
+  }
+  function stopSkel4Anim() {
+    if (skel4Raf) { cancelAnimationFrame(skel4Raf); skel4Raf = null; }
+    const c = document.getElementById('skel4-canvas');
+    if (c) c.getContext('2d').clearRect(0, 0, 360, 141);
+  }
+
+  /* ── Iter-7: grey/white chart wave (settles into gold on data load) ── */
+  let skel7Raf     = null;
+  let skel7Running = false;
+
+  function startSkel7Wave(canvas, clipXGetter) {
+    const ctx = canvas.getContext('2d');
+    const W = 360, H = 141;
+    function getY(x, t) {
+      return 78 - 20*Math.sin(0.033*x + t*2.2) - 8*Math.sin(0.075*x + t*3.8) - 4*Math.sin(0.14*x - t*1.6);
+    }
+    skel7Running = true;
+    function frame(now) {
+      if (!skel7Running) return;
+      const t     = now / 1000;
+      const clipX = clipXGetter();
+      ctx.clearRect(0, 0, W, H);
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(clipX, 0, W - clipX, H);
+      ctx.clip();
+
+      /* gradient fill */
+      const fill = ctx.createLinearGradient(0, 0, 0, H);
+      fill.addColorStop(0, 'rgba(200,200,200,0.08)');
+      fill.addColorStop(1, 'rgba(200,200,200,0)');
+      ctx.beginPath();
+      ctx.moveTo(0, H);
+      for (let x = 0; x <= W; x++) ctx.lineTo(x, getY(x, t));
+      ctx.lineTo(W, H);
+      ctx.closePath();
+      ctx.fillStyle = fill;
+      ctx.fill();
+
+      /* wave line */
+      ctx.shadowColor = 'rgba(220,220,220,0.4)';
+      ctx.shadowBlur  = 6;
+      ctx.strokeStyle = 'rgba(200,200,200,0.50)';
+      ctx.lineWidth   = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(0, getY(0, t));
+      for (let x = 1; x <= W; x++) ctx.lineTo(x, getY(x, t));
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      /* travelling dot */
+      const dotX = ((t * 40) % W + W) % W;
+      if (dotX > clipX) {
+        const dotY = getY(dotX, t);
+        const rad  = ctx.createRadialGradient(dotX, dotY, 0, dotX, dotY, 6);
+        rad.addColorStop(0,   'rgba(240,240,240,0.90)');
+        rad.addColorStop(0.4, 'rgba(200,200,200,0.60)');
+        rad.addColorStop(1,   'rgba(180,180,180,0)');
+        ctx.fillStyle = rad;
+        ctx.beginPath();
+        ctx.arc(dotX, dotY, 6, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.restore();
+      skel7Raf = requestAnimationFrame(frame);
+    }
+    skel7Raf = requestAnimationFrame(frame);
+  }
+
+  function stopSkel7Wave() {
+    skel7Running = false;
+    if (skel7Raf) { cancelAnimationFrame(skel7Raf); skel7Raf = null; }
+    const c = document.getElementById('chart-skel-canvas');
+    if (c) c.getContext('2d').clearRect(0, 0, 360, 141);
+  }
+
+  function animateNumber(el, from, to, duration, fmt) {
+    const t0 = performance.now();
+    let raf;
+    function tick(now) {
+      const p = Math.min((now - t0) / duration, 1);
+      const v = from + (to - from) * easeOutCubic(p);
+      el.textContent = fmt(v);
+      if (p < 1) raf = requestAnimationFrame(tick);
+    }
+    raf = requestAnimationFrame(tick);
+  }
+
+  function animateNetWorth(from, to) {
+    if (nwRaf) cancelAnimationFrame(nwRaf);
+    const el = document.querySelector('.nw-amount');
+    const t0 = performance.now();
+    const dur = 750;
+    function tick(now) {
+      const p = Math.min((now - t0) / dur, 1);
+      const v = from + (to - from) * easeOutCubic(p);
+      el.textContent = '₹' + (v / 100).toFixed(2) + ' Cr';
+      if (p < 1) nwRaf = requestAnimationFrame(tick);
+    }
+    nwRaf = requestAnimationFrame(tick);
+  }
+
+  function animateSubLine(from, to) {
+    const el = document.querySelector('.nw-sub');
+    const sign = to >= 0 ? '+' : '-';
+    animateNumber(el, from, to, 650, v => {
+      const abs = Math.abs(v / 100).toFixed(2);
+      return sign + '₹' + abs + 'L ';
+    });
+    /* restore the "1D" span after animation */
+    setTimeout(() => {
+      const abs = (Math.abs(to) / 100).toFixed(2);
+      el.innerHTML = sign + '₹' + abs + 'L <span>1D</span>';
+    }, 680);
+  }
+
+  function animateCards(toOn, delay) {
+    CARDS.forEach(([sel, offVal, onVal, pre, suf, dec], i) => {
+      const el = document.querySelector(sel);
+      if (!el) return;
+      const from = toOn ? offVal : onVal;
+      const to   = toOn ? onVal  : offVal;
+      setTimeout(() => {
+        animateNumber(el, from, to, 600, v =>
+          pre + (v / 100).toFixed(dec) + suf
+        );
+      }, delay + i * 60);
+    });
+  }
+
+  function animateChart(toOn) {
+    const fromLine  = document.getElementById(toOn ? 'line-full' : 'line-w');
+    const toLine    = document.getElementById(toOn ? 'line-w'    : 'line-full');
+    const fromFill  = document.getElementById(toOn ? 'fill-full' : 'fill-w');
+    const toFill    = document.getElementById(toOn ? 'fill-w'    : 'fill-full');
+    const toGroup   = document.getElementById(toOn ? 'chart-w'   : 'chart-full');
+    const fromGroup = document.getElementById(toOn ? 'chart-full': 'chart-w');
+    const skeleton  = document.getElementById('chart-skeleton');
+    const isIter3   = document.body.classList.contains('iter-3');
+    const isIter5   = document.body.classList.contains('iter-5');
+    const isIter7   = document.body.classList.contains('iter-7');
+    const isIter9   = document.body.classList.contains('iter-9');
+    const isIter1   = !document.body.classList.contains('iter-2') && !isIter3 && !isIter5 && !isIter7 && !isIter9;
+
+    if (isIter9) {
+      /*
+       * Iter-9: White glow blink → gold sweep morph
+       *
+       * Phase 1 (FADE ms)   : line color fades gold → white, glow grows
+       * Phase 2 (free)      : white line pulses with heavy blinking glow until data arrives
+       * Phase 3 (SETTLE ms) : sweep travels left→right; behind sweep = gold (morphing shape)
+       *                       right of sweep = white; bright dot at frontier
+       * Handoff             : SVG line revealed (matches canvas), fill fades in, canvas clears
+       */
+      const FADE   = 380;
+      const SETTLE = 950;
+      const c9  = document.getElementById('chart-skel-canvas');
+      const ctx = c9.getContext('2d');
+      const CW  = 360, CH = 141;
+      const N9  = ITER7_N;
+
+      const fromPts = toOn ? iter7PtsFull : iter7PtsW;
+      const toPts   = toOn ? iter7PtsW    : iter7PtsFull;
+
+      function clamp01(v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
+      function eOut9(t)   { return 1 - Math.pow(1 - t, 3); }
+
+      /* draw a line with two glow passes for intensity */
+      function stroke9(pts, color, glowColor, glowBlur) {
+        if (pts.length < 2) return;
+        ctx.save();
+        ctx.lineCap  = 'round';
+        ctx.lineJoin = 'round';
+        /* outer glow pass */
+        ctx.shadowColor = glowColor;
+        ctx.shadowBlur  = glowBlur;
+        ctx.beginPath();
+        pts.forEach((pt, i) => i === 0 ? ctx.moveTo(pt.x, pt.y) : ctx.lineTo(pt.x, pt.y));
+        ctx.strokeStyle = color;
+        ctx.lineWidth   = 1;
+        ctx.stroke();
+        /* inner tight glow pass */
+        ctx.shadowBlur  = glowBlur * 0.3;
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      function drawFade9(p) {
+        /* p 0→1: gold → white with growing glow */
+        const r = Math.round(199 + (255 - 199) * p);
+        const g = Math.round(168 + (255 - 168) * p);
+        const b = Math.round(101 + (255 - 101) * p);
+        ctx.clearRect(0, 0, CW, CH);
+        stroke9(fromPts, `rgba(${r},${g},${b},0.90)`,
+          `rgba(255,255,255,${0.7 * p})`, 14 * p);
+      }
+
+      function drawPulse9(now) {
+        /* sharp on/off blink: fast sine, clamp low values to zero for a strobe feel */
+        const raw   = Math.sin(now / 1000 * 6);
+        const blink = raw > 0 ? raw : 0;          /* only positive half → flashes */
+        const pulse = 4 + 16 * blink;             /* 4 → 20 range, tight flicker  */
+        const alpha = 0.60 + 0.30 * blink;        /* line opacity also pulses       */
+        ctx.clearRect(0, 0, CW, CH);
+        stroke9(fromPts, `rgba(255,255,255,${alpha})`,
+          `rgba(255,255,255,${0.55 + 0.45 * blink})`, pulse);
+      }
+
+      /* Phase A: sweep gold across the existing line — shape never changes */
+      function drawSweep9(sweepP) {
+        const sweepIdx = Math.round(clamp01(sweepP) * N9);
+        ctx.clearRect(0, 0, CW, CH);
+
+        if (sweepIdx < N9)
+          stroke9(fromPts.slice(sweepIdx),
+            'rgba(255,255,255,0.88)', 'rgba(255,255,255,0.55)', 8);
+
+        if (sweepIdx > 0)
+          stroke9(fromPts.slice(0, sweepIdx + 1),
+            'rgba(199,168,101,0.92)', 'rgba(199,168,101,0.50)', 9);
+
+        if (sweepIdx > 0 && sweepIdx < N9) {
+          const sp = fromPts[sweepIdx];
+          ctx.save();
+          ctx.shadowColor = 'rgba(255,255,255,1)';
+          ctx.shadowBlur  = 28;
+          ctx.beginPath();
+          ctx.arc(sp.x, sp.y, 2.5, 0, Math.PI * 2);
+          ctx.fillStyle = '#ffffff';
+          ctx.fill();
+          ctx.restore();
+        }
+      }
+
+      /* Phase B: morph fromPts → toPts, fully gold */
+      function drawMorph9(p) {
+        ctx.clearRect(0, 0, CW, CH);
+        const morphPts = fromPts.map((fp, i) => {
+          const tp = toPts[i];
+          return { x: fp.x + (tp.x - fp.x) * p, y: fp.y + (tp.y - fp.y) * p };
+        });
+        stroke9(morphPts, 'rgba(199,168,101,0.92)', 'rgba(199,168,101,0.50)', 9);
+      }
+
+      /* setup: reset any dash state from prior iterations, hide SVG groups, canvas takes over */
+      [fromLine, toLine].forEach(el => {
+        el.style.transition        = 'none';
+        el.style.strokeDasharray   = 'none';
+        el.style.strokeDashoffset  = '0';
+      });
+      [fromFill, toFill].forEach(el => {
+        el.style.transition = 'none';
+        el.style.opacity    = '0';
+      });
+      fromGroup.style.visibility = 'hidden';
+      toGroup.style.visibility   = 'hidden';
+      skeleton.style.display     = 'block';
+
+      let dataArrivalTs = null;
+      setTimeout(() => { dataArrivalTs = performance.now(); }, chartLoadMs);
+
+      let iter9Raf = null, iter9Done = false;
+      const animStart = performance.now();
+
+      (function loop(now) {
+        if (iter9Done) return;
+        const elapsed = now - animStart;
+
+        if (elapsed < FADE) {
+          drawFade9(elapsed / FADE);
+        } else {
+          drawPulse9(now);
+
+          if (elapsed >= 1500) {
+            const ta = clamp01((elapsed - 1500) / 350);
+            ctx.fillStyle = `rgba(152,158,160,${ta * 0.75})`;
+            ctx.font = '12px GrowwSans, -apple-system, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('Updating data…', CW / 2, CH - 14);
+            ctx.textAlign = 'start';
+          }
+
+          if (dataArrivalTs) {
+            iter9Done = true;
+            const t0 = now;
+            const SWEEP_DUR = SETTLE * 0.4;
+            const MORPH_DUR = SETTLE * 0.6;
+            let morphDone = false;
+            (function settle(now2) {
+              if (morphDone) return;
+              const elapsed = now2 - t0;
+              if (elapsed < SWEEP_DUR) {
+                /* Phase A: sweep gold left→right across old chart shape */
+                drawSweep9(elapsed / SWEEP_DUR);
+                iter9Raf = requestAnimationFrame(settle);
+              } else {
+                /* Phase B: morph old shape → new shape, fully gold */
+                const morphP = eOut9(clamp01((elapsed - SWEEP_DUR) / MORPH_DUR));
+                drawMorph9(morphP);
+                if (morphP >= 1) {
+                  morphDone = true;
+                  /* same-frame SVG handoff — canvas is already drawing the exact final position */
+                  toGroup.style.visibility = 'visible';
+                  toGroup.style.opacity    = '1';
+                  ctx.clearRect(0, 0, CW, CH);
+                  skeleton.style.display   = 'none';
+                  toFill.style.transition  = 'opacity 0.2s ease';
+                  toFill.style.opacity     = '1';
+                  return;
+                }
+                iter9Raf = requestAnimationFrame(settle);
+              }
+            })(now);
+            return;
+          }
+        }
+
+        iter9Raf = requestAnimationFrame(loop);
+      })(performance.now());
+      return;
+    }
+
+    if (isIter7) {
+      /*
+       * Iter-7: Gold → White → Gold  (all on canvas, no CSS filter)
+       *
+       * Canvas takes over the SVG immediately — no lag.
+       *
+       * Phase 1 (FADE ms)       : canvas draws old chart path, color gold→white
+       * Phase 2 (ENTRY ms)      : white, old chart shape morphs → sine wave
+       * Phase 2b               : white sine wave runs freely until data arrives
+       *                          (waits for both data AND phase 1+2 to complete)
+       * Phase 3 (SETTLE ms)    : sine morphs → new chart shape, white→gold
+       * Handoff                : canvas clears, SVG revealed — seamless
+       */
+      const FADE   = 500;
+      const ENTRY  = 420;
+      const SETTLE = 800;
+      const c7  = document.getElementById('chart-skel-canvas');
+      const ctx = c7.getContext('2d');
+      const CW = 360, CH = 141;
+
+      function getY7(x, t) {
+        return 78 - 20*Math.sin(0.033*x + t*2.2) - 8*Math.sin(0.075*x + t*3.8) - 4*Math.sin(0.14*x - t*1.6);
+      }
+      function clamp01(v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
+      function eOut7(t)   { return 1 - Math.pow(1 - t, 3); }
+
+      /* Use precomputed paths — zero sampling cost on click */
+      const N7 = ITER7_N;
+      const fromChartPts = toOn ? iter7PtsFull : iter7PtsW;
+      const toChartPts   = toOn ? iter7PtsW    : iter7PtsFull;
+
+      /*
+       * drawFrame7(t, shapeMorphP, colorMorphP, targetPts)
+       *   shapeMorphP  0 = sine wave shape,  1 = targetPts shape
+       *   colorMorphP  0 = white,             1 = gold
+       */
+      function drawFrame7(t, shapeMorphP, colorMorphP, targetPts) {
+        const shapeEp = eOut7(clamp01(shapeMorphP));
+        const colorEp = eOut7(clamp01(colorMorphP));
+
+        /* grey (155,155,155) → gold (199,168,101) */
+        const r = Math.round(155 + (199 - 155) * colorEp);
+        const g = Math.round(155 + (168 - 155) * colorEp);
+        const b = Math.round(155 + (101 - 155) * colorEp);
+
+        ctx.clearRect(0, 0, CW, CH);
+
+        const pts = targetPts.map(pt => ({
+          x: pt.x,
+          y: getY7(pt.x, t) + (pt.y - getY7(pt.x, t)) * shapeEp
+        }));
+
+        if (colorEp > 0.5) {
+          const glow = (colorEp - 0.5) / 0.5;
+          ctx.shadowColor = `rgba(199,168,101,${0.5 * glow})`;
+          ctx.shadowBlur  = 8 * glow;
+        }
+        ctx.beginPath();
+        pts.forEach((pt, i) => i === 0 ? ctx.moveTo(pt.x, pt.y) : ctx.lineTo(pt.x, pt.y));
+        ctx.strokeStyle = `rgba(${r},${g},${b},0.90)`;
+        ctx.lineWidth   = 1.5;
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+      }
+
+      /* Hide SVG immediately — canvas takes over from frame 0 */
+      fromGroup.style.transition = 'none';
+      fromGroup.style.filter     = '';
+      fromGroup.style.visibility = 'hidden';
+      fromFill.style.transition  = 'none';
+      fromFill.style.opacity     = '0';
+      toGroup.style.visibility   = 'hidden';
+      toLine.style.strokeDasharray  = '';
+      toLine.style.strokeDashoffset = '';
+      toFill.style.transition = 'none';
+      toFill.style.opacity    = '0';
+      skeleton.style.display  = 'block';
+
+      /* Data arrival timer starts at the same moment as the animation */
+      let dataArrivalTs = null;
+      setTimeout(() => { dataArrivalTs = performance.now(); }, chartLoadMs);
+
+      let iter7Raf  = null;
+      let iter7Done = false;
+      const animStart = performance.now();
+
+      (function preLoop(now) {
+        if (iter7Done) return;
+        const elapsed = now - animStart;
+
+        let shapeMorphP, colorMorphP;
+        if (elapsed < FADE) {
+          /* Phase 1: gold → white, chart shape fixed */
+          shapeMorphP = 1;
+          colorMorphP = 1 - (elapsed / FADE);       /* linear 1→0 (gold→white) */
+        } else if (elapsed < FADE + ENTRY) {
+          /* Phase 2 entry: white, chart shape releases to sine */
+          shapeMorphP = 1 - ((elapsed - FADE) / ENTRY); /* linear 1→0 */
+          colorMorphP = 0;
+        } else {
+          /* Phase 2b: free white sine wave */
+          shapeMorphP = 0;
+          colorMorphP = 0;
+        }
+
+        drawFrame7(now / 1000, shapeMorphP, colorMorphP, fromChartPts);
+
+        /* Show loading text after 1.5s of total wait (worst-case indicator) */
+        if (elapsed >= 1500 && shapeMorphP === 0) {
+          const textAlpha = clamp01((elapsed - 1500) / 350);
+          ctx.fillStyle = `rgba(152,158,160,${textAlpha * 0.75})`;
+          ctx.font = '12px GrowwSans, -apple-system, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText('Updating data…', CW / 2, CH - 14);
+          ctx.textAlign = 'start';
+        }
+
+        /* Start settle only after entry is done AND data has arrived */
+        if (elapsed >= FADE + ENTRY && dataArrivalTs) {
+          iter7Done       = true;
+          const freezeT   = now / 1000;
+          const settleT0  = now;
+
+          (function settleLoop(now2) {
+            const p = clamp01((now2 - settleT0) / SETTLE);
+            drawFrame7(freezeT, p, p, toChartPts);
+
+            if (p < 1) {
+              iter7Raf = requestAnimationFrame(settleLoop);
+            } else {
+              /* Seamless handoff: canvas is now gold new-chart → reveal SVG */
+              ctx.clearRect(0, 0, CW, CH);
+              skeleton.style.display   = 'none';
+              toGroup.style.visibility = 'visible';
+              toFill.style.transition  = 'none';
+              toFill.style.opacity     = '1';
+            }
+          })(now);
+          return;
+        }
+
+        iter7Raf = requestAnimationFrame(preLoop);
+      })(performance.now());
+      return;
+    }
+
+    if (isIter5) {
+      /*
+       * Iter-5: internet-speed-aware chart transition
+       *
+       * Best  (~0.3s): data arrives DURING erase → new chart draws behind the wiper in sync
+       * Mid   (~1.5s): data arrives AFTER erase → wiper loops over empty chart until data
+       *                arrives, then waits for loop end before drawing
+       * Worst (~3.5s): same as mid, many more loops
+       *
+       * Rule: the wiper always completes its current sweep before the new chart begins.
+       */
+      const SWEEP = 600; // one wiper sweep duration (ms)
+      const DRAW  = 700; // new chart draw-in duration (ms)
+      const c5    = document.getElementById('chart-skel-canvas');
+      const x5    = c5.getContext('2d');
+      const CW = 360, CH = 141;
+
+      const fromLen = fromLine.getTotalLength();
+      const toLen   = toLine.getTotalLength();
+
+      /* prepare old chart */
+      fromLine.style.strokeDasharray  = fromLen;
+      fromLine.style.strokeDashoffset = '0';
+      fromFill.style.transition = 'none';
+      fromFill.style.opacity    = '1';
+      fromGroup.style.visibility = 'visible';
+
+      /* prepare new chart (invisible) */
+      toGroup.style.visibility = 'visible';
+      toLine.style.strokeDasharray  = toLen;
+      toLine.style.strokeDashoffset = String(toLen);
+      toFill.style.transition = 'none';
+      toFill.style.opacity    = '0';
+
+      skeleton.style.display = 'block';
+
+      /* simulate data arrival */
+      let dataArrivalTs = null;
+      setTimeout(() => { dataArrivalTs = performance.now(); }, chartLoadMs);
+
+      function clamp01(v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
+
+      function drawWiper(p) {
+        x5.clearRect(0, 0, CW, CH);
+        if (p <= 0.01 || p >= 0.99) return;
+        const dotX = p * CW, dotY = 75;
+        const env  = Math.sin(p * Math.PI);
+        const lineG = x5.createLinearGradient(dotX, 0, dotX, CH);
+        lineG.addColorStop(0,    `rgba(199,168,101,0)`);
+        lineG.addColorStop(0.25, `rgba(255,221,141,${0.30 * env})`);
+        lineG.addColorStop(0.50, `rgba(255,230,160,${0.50 * env})`);
+        lineG.addColorStop(0.75, `rgba(255,221,141,${0.30 * env})`);
+        lineG.addColorStop(1,    `rgba(199,168,101,0)`);
+        x5.fillStyle = lineG;
+        x5.fillRect(dotX - 1, 0, 2.5, CH);
+        const rad = x5.createRadialGradient(dotX, dotY, 0, dotX, dotY, 9);
+        rad.addColorStop(0,   `rgba(255,248,210,${0.95 * env})`);
+        rad.addColorStop(0.4, `rgba(255,221,141,${0.65 * env})`);
+        rad.addColorStop(1,   `rgba(199,168,101,0)`);
+        x5.fillStyle = rad;
+        x5.beginPath();
+        x5.arc(dotX, dotY, 9, 0, Math.PI * 2);
+        x5.fill();
+      }
+
+      /* ── Phase 3: draw new chart in ── */
+      function drawNewChart() {
+        skeleton.style.display = 'none';
+        x5.clearRect(0, 0, CW, CH);
+        toLine.style.strokeDashoffset = String(toLen);
+        toFill.style.transition = 'opacity 0.55s ease';
+        toFill.style.opacity    = '1';
+        const t3 = performance.now();
+        function eOut(t) { return 1 - Math.pow(1 - t, 3); }
+        (function draw3(now) {
+          const p = clamp01((now - t3) / DRAW);
+          toLine.style.strokeDashoffset = String(toLen * (1 - eOut(p)));
+          if (p < 1) requestAnimationFrame(draw3);
+          else toLine.style.strokeDasharray = toLine.style.strokeDashoffset = '';
+        })(performance.now());
+      }
+
+      /* ── Phase 2: loading loops (wiper over empty chart) ── */
+      function loadLoop() {
+        const loopT = performance.now();
+        (function sweep(now) {
+          const p = clamp01((now - loopT) / SWEEP);
+          drawWiper(p);
+          if (p < 1) {
+            requestAnimationFrame(sweep);
+          } else {
+            x5.clearRect(0, 0, CW, CH);
+            if (dataArrivalTs) {
+              drawNewChart(); /* data ready — wipe just finished, draw */
+            } else {
+              loadLoop();    /* still waiting — sweep again */
+            }
+          }
+        })(performance.now());
+      }
+
+      /* ── Phase 1: erase old chart, wiper at frontier ── */
+      let dataArrivalEraseP = null; /* where on [0,1] data arrived during erase */
+      const eraseT = performance.now();
+
+      (function erase(now) {
+        const eraseP = clamp01((now - eraseT) / SWEEP);
+
+        /* capture eraseP at the moment data arrived */
+        if (dataArrivalTs && dataArrivalEraseP === null) {
+          dataArrivalEraseP = clamp01((dataArrivalTs - eraseT) / SWEEP);
+        }
+
+        fromLine.style.strokeDashoffset = String(-(fromLen * eraseP));
+        fromFill.style.opacity = String(1 - eraseP);
+        drawWiper(eraseP);
+
+        /* FAST CASE: data arrived during erase → draw new chart behind wiper in sync */
+        if (dataArrivalEraseP !== null && dataArrivalEraseP < 1) {
+          const drawP = clamp01(
+            (eraseP - dataArrivalEraseP) / (1 - dataArrivalEraseP)
+          );
+          toLine.style.strokeDashoffset = String(toLen * (1 - drawP));
+          toFill.style.opacity          = String(drawP);
+        }
+
+        if (eraseP < 1) {
+          requestAnimationFrame(erase);
+        } else {
+          /* erase sweep complete */
+          fromGroup.style.visibility = 'hidden';
+          fromLine.style.strokeDasharray = fromLine.style.strokeDashoffset = '';
+          x5.clearRect(0, 0, CW, CH);
+
+          if (dataArrivalEraseP !== null) {
+            /* FAST CASE done: new chart is already fully drawn */
+            toLine.style.strokeDasharray = toLine.style.strokeDashoffset = '';
+            toFill.style.opacity = '1';
+            skeleton.style.display = 'none';
+          } else {
+            /* MID / WORST: data not ready yet, start loading loops */
+            loadLoop();
+          }
+        }
+      })(performance.now());
+      return;
+    }
+
+    if (isIter3 || isIter1) {
+      /* ── Iter-1 & Iter-3: one continuous 950ms gesture, no hard handoffs ── */
+      const TOTAL   = 1100;
+      const fromLen = fromLine.getTotalLength();
+      const toLen   = toLine.getTotalLength();
+
+      fromLine.style.strokeDasharray  = fromLen;
+      fromLine.style.strokeDashoffset = '0';
+      fromFill.style.transition = 'none';
+      fromFill.style.opacity    = '1';
+      fromGroup.style.visibility = 'visible';
+
+      toGroup.style.visibility = 'visible';
+      toLine.style.strokeDasharray  = toLen;
+      toLine.style.strokeDashoffset = String(toLen);
+      toFill.style.transition = 'none';
+      toFill.style.opacity    = '0';
+
+      skeleton.style.display = 'block';
+      const canvas = document.getElementById('chart-skel-canvas');
+      const ctx    = canvas.getContext('2d');
+      const CW = 360, CH = 141;
+
+      function easeOut3(t) { return 1 - Math.pow(1 - t, 3); }
+      function clamp(v)    { return v < 0 ? 0 : v > 1 ? 1 : v; }
+      function sub(p, a, b){ return clamp((p - a) / (b - a)); }
+
+      const t0 = performance.now();
+      let raf3;
+      function tick3(now) {
+        const p = Math.min((now - t0) / TOTAL, 1);
+
+        /* old chart erases linearly 0→0.45 — same progress drives the dot */
+        const eraseP = sub(p, 0, 0.45);
+        fromLine.style.strokeDashoffset = String(-(fromLen * eraseP));
+        fromFill.style.opacity          = String(1 - eraseP);
+
+        /* new chart: draw 0.60→1.0, fill fade 0.62→1.0 */
+        const entryP = sub(p, 0.60, 1.0);
+        toLine.style.strokeDashoffset = String(toLen * (1 - easeOut3(entryP)));
+        toFill.style.opacity          = String(easeOut3(sub(p, 0.62, 1.0)));
+
+        /* wiper dot: position = exactly where the erase frontier is */
+        ctx.clearRect(0, 0, CW, CH);
+        if (eraseP > 0.01 && eraseP < 0.99) {
+          const dotX = eraseP * CW;
+          const dotY = 75;
+          const env  = Math.sin(eraseP * Math.PI); /* fades in & out with the erase */
+
+          /* vertical sweep line */
+          const lineG = ctx.createLinearGradient(dotX, 0, dotX, CH);
+          lineG.addColorStop(0,    `rgba(199,168,101,0)`);
+          lineG.addColorStop(0.25, `rgba(255,221,141,${0.30 * env})`);
+          lineG.addColorStop(0.50, `rgba(255,230,160,${0.50 * env})`);
+          lineG.addColorStop(0.75, `rgba(255,221,141,${0.30 * env})`);
+          lineG.addColorStop(1,    `rgba(199,168,101,0)`);
+          ctx.fillStyle = lineG;
+          ctx.fillRect(dotX - 1, 0, 2.5, CH);
+
+          /* bright radial dot */
+          const radial = ctx.createRadialGradient(dotX, dotY, 0, dotX, dotY, 9);
+          radial.addColorStop(0,   `rgba(255,248,210,${0.95 * env})`);
+          radial.addColorStop(0.4, `rgba(255,221,141,${0.65 * env})`);
+          radial.addColorStop(1,   `rgba(199,168,101,0)`);
+          ctx.fillStyle = radial;
+          ctx.beginPath();
+          ctx.arc(dotX, dotY, 9, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        if (p < 1) {
+          raf3 = requestAnimationFrame(tick3);
+        } else {
+          fromGroup.style.visibility = 'hidden';
+          fromLine.style.strokeDasharray = fromLine.style.strokeDashoffset = '';
+          fromFill.style.opacity = '';
+          toLine.style.strokeDasharray = toLine.style.strokeDashoffset = '';
+          toFill.style.opacity = '';
+          skeleton.style.display = 'none';
+          ctx.clearRect(0, 0, CW, CH);
+        }
+      }
+      raf3 = requestAnimationFrame(tick3);
+      return;
+    }
+
+    /* ── Non-iter-3: original 3-phase approach ── */
+    fromFill.style.transition = 'opacity 0.18s ease';
+    fromFill.style.opacity    = '0';
+
+    const fromLen = fromLine.getTotalLength();
+    fromLine.style.strokeDasharray  = fromLen;
+    fromLine.style.strokeDashoffset = '0';
+    const t0phase1 = performance.now();
+    (function fadeOut(now) {
+      const p = Math.min((now - t0phase1) / 180, 1);
+      fromLine.style.strokeDashoffset = String(-(fromLen * (1 - Math.pow(1 - p, 3))));
+      if (p < 1) requestAnimationFrame(fadeOut);
+    })(performance.now());
+
+    /* ── Phase 2: skeleton (starts at 180ms, lasts 400ms) ── */
+    setTimeout(() => {
+      fromGroup.style.visibility = 'hidden';
+      fromLine.style.strokeDasharray = fromLine.style.strokeDashoffset = '';
+      skeleton.style.display = 'block';
+      startSkeletonAnim();
+
+      /* ── Phase 3: draw new chart (starts at 580ms) ── */
+      setTimeout(() => {
+        stopSkeletonAnim();
+        skeleton.style.display = 'none';
+
+        const toLen = toLine.getTotalLength();
+        toGroup.style.visibility  = 'visible';
+        toLine.style.strokeDasharray  = toLen;
+        toLine.style.strokeDashoffset = toLen;
+
+        toFill.style.transition = 'opacity 0.55s ease';
+        toFill.style.opacity    = '1';
+
+        const dur = 650;
+        const t0  = performance.now();
+        function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
+        let raf;
+        function tick(now) {
+          const p = Math.min((now - t0) / dur, 1);
+          toLine.style.strokeDashoffset = String(toLen * (1 - easeOut(p)));
+          if (p < 1) {
+            raf = requestAnimationFrame(tick);
+          } else {
+            toLine.style.strokeDasharray = toLine.style.strokeDashoffset = '';
+          }
+        }
+        raf = requestAnimationFrame(tick);
+      }, 400);
+    }, 180);
+  }
+
+  function swapLabels(toOn) {
+    const nwLabel     = document.getElementById('nw-label');
+    const assetsTitle = document.getElementById('assets-title');
+
+    /* fade out */
+    nwLabel.style.transition     = 'opacity 0.18s ease';
+    assetsTitle.style.transition = 'opacity 0.18s ease';
+    nwLabel.style.opacity        = '0';
+    assetsTitle.style.opacity    = '0';
+
+    setTimeout(() => {
+      if (toOn) {
+        nwLabel.childNodes[0].textContent = 'MANAGED BY W ';
+        assetsTitle.textContent           = 'Assets managed by W (6)';
+      } else {
+        nwLabel.childNodes[0].textContent = 'TOTAL NET WORTH ';
+        assetsTitle.textContent           = 'All Assets (7)';
+      }
+      /* fade in */
+      nwLabel.style.opacity     = '1';
+      assetsTitle.style.opacity = '1';
+    }, 190);
+  }
+
+  function syncMFTabs(toOn) {
+    const stocksTab = document.getElementById('mf-tab-stocks');
+    if (!stocksTab) return;
+    /* In iter-3 stocks is never hidden — it stays as a tab */
+    if (document.body.classList.contains('iter-3')) {
+      stocksTab.classList.remove('tab-hidden');
+      return;
+    }
+    if (toOn) stocksTab.classList.add('tab-hidden');
+    else      stocksTab.classList.remove('tab-hidden');
+  }
+
+  /* ── Iter-3: FLIP card reorder ── */
+  /* W-on order sorted by W-managed value: AIF(₹2.45Cr) → PMS(₹51.29L) → MF(₹35.42L) → Unlisted → Stocks(disabled)
+     W-off order: Stocks → MF → AIF → PMS → Unlisted                                                               */
+  const ORDER_OFF = ['card-stocks','card-mutual','card-aif','card-pms','card-unlisted'];
+  const ORDER_ON  = ['card-aif','card-pms','card-mutual','card-unlisted','card-stocks'];
+
+  function iter3ReorderCards(toOn, animate) {
+    const container = document.querySelector('#screen-home .cards');
+    const cards = Array.from(container.querySelectorAll('.card'));
+    const targetOrder = toOn ? ORDER_ON : ORDER_OFF;
+
+    if (!animate) {
+      targetOrder.forEach(cls => {
+        const c = container.querySelector('.' + cls);
+        if (c) container.appendChild(c);
+      });
+      return;
+    }
+
+    /* FLIP — record before positions */
+    const before = {};
+    cards.forEach(card => {
+      const key = Array.from(card.classList).find(c => c !== 'card' && c.startsWith('card-'));
+      before[key] = card.getBoundingClientRect().top;
+    });
+
+    /* Reorder DOM — :nth-child CSS rules auto-assign correct z-indices */
+    targetOrder.forEach(cls => {
+      const c = container.querySelector('.' + cls);
+      if (c) container.appendChild(c);
+    });
+
+    /* Apply inverse transforms so each card starts at its old visual position */
+    cards.forEach(card => {
+      const key = Array.from(card.classList).find(c => c !== 'card' && c.startsWith('card-'));
+      const delta = before[key] - card.getBoundingClientRect().top;
+      card.style.transition = 'none';
+      card.style.transform  = `translateY(${delta}px)`;
+    });
+
+    /* Force reflow, then release — cards animate to final positions */
+    container.getBoundingClientRect();
+    cards.forEach(card => {
+      card.style.transition = 'transform 0.52s cubic-bezier(0.4, 0, 0.2, 1)';
+      card.style.transform  = '';
+    });
+    setTimeout(() => cards.forEach(c => { c.style.transition = ''; }), 560);
+  }
+
+  window.toggleWManaged = function (btn) {
+    const isOn    = btn.classList.contains('on');
+    const isIter3 = document.body.classList.contains('iter-3');
+    const isIter8 = document.body.classList.contains('iter-8');
+
+    /* iter-8: if toggling while on stocks panel, turn ON and switch to MF panel */
+    if (isIter8 && document.getElementById('screen-mf').classList.contains('active') &&
+        document.getElementById('screen-mf').getAttribute('data-panel') === 'stocks') {
+      if (!isOn) {
+        document.querySelectorAll('.w-toggle').forEach(t => t.classList.add('on'));
+        if (typeof updateSimState === 'function') updateSimState();
+      }
+      switchToMFPanel();
+      return;
+    }
+
+    /* sync every W toggle on every screen */
+    document.querySelectorAll('.w-toggle').forEach(t => {
+      if (isOn) t.classList.remove('on');
+      else      t.classList.add('on');
+    });
+    if (typeof updateSimState === 'function') updateSimState();
+
+    /* sync MF tabs */
+    syncMFTabs(!isOn);
+
+    const stocksCard = document.querySelector('.card-stocks');
+
+    if (!isOn) {
+      /* ── Turning ON ── */
+      if (isIter3) {
+        stocksCard.classList.add('card-disabled');
+        iter3ReorderCards(true, true);
+      } else {
+        stocksCard.classList.add('card-hidden');
+      }
+      animateNetWorth(NW_OFF, NW_ON);
+      animateSubLine(SUB_OFF, SUB_ON);
+      animateCards(true, 180);
+      swapLabels(true);
+      animateChart(true);
+
+    } else {
+      /* ── Turning OFF ── */
+      /* Restore Stocks tab if it was hidden */
+      const stocksTabEl = document.getElementById('mf-tab-stocks');
+      if (stocksTabEl) stocksTabEl.style.display = '';
+      if (isIter3) {
+        stocksCard.classList.remove('card-disabled');
+        iter3ReorderCards(false, true);
+      } else {
+        const s = stocksCard.style;
+        s.transition   = 'none';
+        s.transform    = 'scale(0.88) translateY(20px)';
+        s.opacity      = '0';
+        s.marginBottom = '-100px';
+        stocksCard.classList.remove('card-hidden');
+        stocksCard.getBoundingClientRect();
+        s.transition   = '';
+        s.transform    = '';
+        s.opacity      = '';
+        s.marginBottom = '';
+        setTimeout(() => { s.transition = s.transform = s.opacity = s.marginBottom = ''; }, 550);
+      }
+      animateNetWorth(NW_ON, NW_OFF);
+      animateSubLine(SUB_ON, SUB_OFF);
+      animateCards(false, 60);
+      swapLabels(false);
+      animateChart(false);
+    }
+  };
+
+  /* ── helpers ── */
+  function setTabActive(tabId) {
+    document.querySelectorAll('.mf-tab').forEach(t => t.classList.remove('active'));
+    const el = document.getElementById(tabId);
+    if (el) el.classList.add('active');
+  }
+
+  window.switchToStocksPanel = function () {
+    const pm = document.getElementById('panel-mf');
+    const ps = document.getElementById('panel-stocks');
+    const stocksTab = document.getElementById('mf-tab-stocks');
+    if (stocksTab) stocksTab.style.display = '';
+    pm.style.transform = 'translateX(-100%)';
+    ps.style.transform = 'translateX(0)';
+    setTabActive('mf-tab-stocks');
+    document.getElementById('screen-mf').setAttribute('data-panel', 'stocks');
+  };
+
+  window.switchToMFPanel = function () {
+    const pm = document.getElementById('panel-mf');
+    const ps = document.getElementById('panel-stocks');
+    pm.style.transform = 'translateX(0)';
+    ps.style.transform = 'translateX(100%)';
+    setTabActive('mf-tab-mf');
+    document.getElementById('screen-mf').setAttribute('data-panel', 'mf');
+    setTimeout(() => {
+      const stocksTab = document.getElementById('mf-tab-stocks');
+      if (stocksTab) stocksTab.style.display = 'none';
+    }, 380);
+  };
+
+  window.goToMF = function () {
+    /* sync MF toggle to match current home toggle state */
+    const homeIsOn = document.querySelector('#screen-home .w-toggle')
+                              .classList.contains('on');
+    document.querySelectorAll('#screen-mf .w-toggle').forEach(t => {
+      if (homeIsOn) t.classList.add('on');
+      else          t.classList.remove('on');
+    });
+    /* sync MF tabs to current W state */
+    syncMFTabs(homeIsOn);
+    /* Show MF panel (default) with no transition flash */
+    const pm = document.getElementById('panel-mf');
+    const ps = document.getElementById('panel-stocks');
+    pm.style.transition = 'none'; pm.style.transform = 'translateX(0)';
+    ps.style.transition = 'none'; ps.style.transform = 'translateX(100%)';
+    void pm.offsetWidth;
+    pm.style.transition = ''; ps.style.transition = '';
+    setTabActive('mf-tab-mf');
+    document.getElementById('screen-mf').setAttribute('data-panel', 'mf');
+    document.getElementById('screen-home').classList.add('pushed');
+    document.getElementById('screen-mf').classList.add('active');
+  };
+
+  window.goBack = function () {
+    document.getElementById('screen-home').classList.remove('pushed');
+    document.getElementById('screen-mf').classList.remove('active');
+  };
+
+  window.goToStocks = function () {
+    const homeIsOn = document.querySelector('#screen-home .w-toggle').classList.contains('on');
+    document.querySelectorAll('#screen-mf .w-toggle').forEach(t => {
+      if (homeIsOn) t.classList.add('on');
+      else          t.classList.remove('on');
+    });
+    syncMFTabs(homeIsOn);
+    /* Ensure Stocks tab is visible */
+    const stocksTab = document.getElementById('mf-tab-stocks');
+    if (stocksTab) stocksTab.style.display = '';
+    /* Pre-position: show Stocks panel with no transition */
+    const pm = document.getElementById('panel-mf');
+    const ps = document.getElementById('panel-stocks');
+    pm.style.transition = 'none'; pm.style.transform = 'translateX(-100%)';
+    ps.style.transition = 'none'; ps.style.transform = 'translateX(0)';
+    void ps.offsetWidth;
+    pm.style.transition = ''; ps.style.transition = '';
+    setTabActive('mf-tab-stocks');
+    document.getElementById('screen-mf').setAttribute('data-panel', 'stocks');
+    document.getElementById('screen-home').classList.add('pushed');
+    document.getElementById('screen-mf').classList.add('active');
+  };
+
+  window.switchIter = function (n) {
+    const wIsOn      = document.querySelector('.w-toggle').classList.contains('on');
+    const wasIter3   = document.body.classList.contains('iter-3');
+    const wasIter4   = document.body.classList.contains('iter-4');
+    const stocksCard = document.querySelector('.card-stocks');
+
+    if (wasIter4) stopSkel4Anim();
+
+    document.body.classList.remove('iter-2', 'iter-3', 'iter-4', 'iter-5', 'iter-6', 'iter-7', 'iter-8', 'iter-9');
+
+    /* If W is currently ON, reconcile card state for the new iteration */
+    if (wIsOn) {
+      if (wasIter3 && n !== 3) {
+        /* leaving iter-3: restore order, remove disabled, apply hidden for iter-1/2 */
+        stocksCard.classList.remove('card-disabled');
+        iter3ReorderCards(false, false);
+        stocksCard.classList.add('card-hidden');
+      } else if (!wasIter3 && n === 3) {
+        /* entering iter-3: remove hidden, reorder, add disabled */
+        stocksCard.classList.remove('card-hidden');
+        iter3ReorderCards(true, false);
+        stocksCard.classList.add('card-disabled');
+      }
+    }
+
+    if (n === 2) document.body.classList.add('iter-2');
+    if (n === 3) document.body.classList.add('iter-3');
+    if (n === 4) { document.body.classList.add('iter-4'); startSkel4Anim(); }
+    if (n === 5) document.body.classList.add('iter-5');
+    if (n === 6) document.body.classList.add('iter-6');
+    if (n === 7) document.body.classList.add('iter-7');
+    if (n === 8) document.body.classList.add('iter-8');
+    if (n === 9) document.body.classList.add('iter-9');
+
+    /* Re-sync Stocks tab visibility for the new iteration */
+    syncMFTabs(wIsOn);
+
+    document.querySelectorAll('.iter-item').forEach((el, i) => {
+      el.classList.toggle('active', i + 1 === n);
+    });
+  };
+
+})();
+</script>
+
+</body>
+</html>
