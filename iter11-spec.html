@@ -5,11 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Iter 11 — MF W Toggle · Handoff Spec</title>
 <style>
+  @font-face {
+    font-family: 'Groww Sans';
+    src: url('../Groww Sans (1)/Variable/GrowwSans-Variable.ttf') format('truetype');
+    font-weight: 100 900;
+    font-style: normal;
+  }
+  @font-face {
+    font-family: 'Groww Sans';
+    src: url('../Groww Sans (1)/Variable/GrowwSans-VariableItalic.ttf') format('truetype');
+    font-weight: 100 900;
+    font-style: italic;
+  }
+</style>
+<style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
     background: #0A0C0E;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: 'Groww Sans', -apple-system, BlinkMacSystemFont, sans-serif;
     color: #F2F5F7;
     display: flex;
     min-height: 100vh;
@@ -258,17 +272,18 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 6px 0;
+    width: 100%;
+    padding: 8px 0;
     overflow: hidden;
-    max-height: 40px;
+    max-height: 44px;
     transition: max-height 0.32s ease, opacity 0.25s ease, margin 0.32s ease, padding 0.32s ease;
   }
   .metric-row.collapsed {
     max-height: 0; opacity: 0; padding: 0; margin: 0;
   }
-  .metric-label { font-size: 13px; color: rgba(255,255,255,0.45); }
-  .metric-val   { font-size: 13px; font-weight: 500; color: #F2F5F7; }
-  .metric-pct   { font-size: 11px; color: rgba(255,255,255,0.35); margin-left: 4px; }
+  .metric-label { font-size: 13px; color: rgba(255,255,255,0.45); font-weight: 400; }
+  .metric-val   { font-size: 13px; font-weight: 500; color: #F2F5F7; text-align: right; display: flex; align-items: center; gap: 4px; }
+  .metric-pct   { font-size: 13px; color: rgba(255,255,255,0.45); font-weight: 400; }
   .gain { color: #04B488; }
 
   /* Below-card wrapper */
@@ -331,17 +346,31 @@
     gap: 12px;
     padding: 12px 0;
     border-bottom: 1px dashed rgba(255,255,255,0.08);
+    overflow: hidden;
+    max-height: 80px;
+    transition: max-height 0.38s ease, opacity 0.28s ease, padding 0.38s ease, border-color 0.38s ease;
+  }
+  .fund-item.w-gone {
+    max-height: 0;
+    opacity: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    border-color: transparent;
+  }
+  .fund-current {
+    font-size: 13px;
+    font-weight: 600;
+    transition: opacity 0.2s ease;
   }
   .fund-logo {
     width: 40px; height: 40px;
     border-radius: 12px;
     display: flex; align-items: center; justify-content: center;
     flex-shrink: 0;
-    font-size: 11px; font-weight: 800;
   }
   .fund-name { flex: 1; font-size: 13px; color: #F2F5F7; line-height: 1.4; }
   .fund-amounts { text-align: right; }
-  .fund-current { font-size: 13px; font-weight: 600; }
+  .fund-invested { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 2px; }
   .fund-invested { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 2px; }
   .gain { color: #04B488; }
   .loss { color: #FF8C42; }
@@ -535,6 +564,41 @@
     color: rgba(255,255,255,0.7);
   }
 
+  /* Case switcher */
+  .case-switcher {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+    margin-bottom: 20px;
+  }
+  .case-tab {
+    flex: 1;
+    padding: 10px 12px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    color: rgba(255,255,255,0.4);
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  }
+  .case-tab.active {
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.22);
+    color: #F2F5F7;
+  }
+  .case-tab-title {
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+  .case-tab-sub {
+    font-size: 11px;
+    color: rgba(255,255,255,0.35);
+    line-height: 1.3;
+  }
+  .case-tab.active .case-tab-sub { color: rgba(255,255,255,0.5); }
+
   /* Divider */
   .spec-divider {
     width: 100%;
@@ -549,6 +613,18 @@
   <!-- ── LEFT: Phone prototype ── -->
   <div class="phone-col">
     <div class="phone-col-label">Interactive prototype</div>
+
+    <div class="case-switcher">
+      <button class="case-tab active" data-case="A" onclick="switchCase('A')">
+        <div class="case-tab-title">Case A</div>
+        <div class="case-tab-sub">Has W-eligible funds</div>
+      </button>
+      <button class="case-tab" data-case="B" onclick="switchCase('B')">
+        <div class="case-tab-title">Case B</div>
+        <div class="case-tab-sub">No W-eligible funds</div>
+      </button>
+    </div>
+
     <div class="phone">
       <div class="mf-screen">
 
@@ -596,12 +672,6 @@
                 <div class="card-amount" id="card-amount">₹13.62Cr</div>
               </div>
               <div class="card-icons">
-                <div class="icon-btn">
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M14 8A6 6 0 112 8" stroke="rgba(255,255,255,0.6)" stroke-width="1.5" stroke-linecap="round"/><path d="M14 8l-2-2M14 8l-2 2" stroke="rgba(255,255,255,0.6)" stroke-width="1.5" stroke-linecap="round"/></svg>
-                </div>
-                <div class="icon-btn">
-                  <svg width="14" height="4" viewBox="0 0 14 4" fill="rgba(255,255,255,0.6)"><circle cx="2" cy="2" r="1.8"/><circle cx="7" cy="2" r="1.8"/><circle cx="12" cy="2" r="1.8"/></svg>
-                </div>
                 <div class="w-toggle" id="w-toggle" onclick="toggleW()">
                   <span class="w-letter">W</span>
                   <div class="toggle-track"><div class="toggle-dot"></div></div>
@@ -613,19 +683,19 @@
             <hr class="card-divider" id="card-divider">
             <div class="metric-row" id="m1">
               <span class="metric-label">1D returns</span>
-              <span class="metric-val"><span class="gain">+₹25.56L</span><span class="metric-pct">12.33%</span></span>
+              <span class="metric-val"><span class="gain" id="m1-val">+₹25.56L</span><span class="metric-pct" id="m1-pct">(12.33%)</span></span>
             </div>
             <div class="metric-row" id="m2">
               <span class="metric-label">Total returns</span>
-              <span class="metric-val"><span class="gain">+₹2.56L</span><span class="metric-pct">17.56%</span></span>
+              <span class="metric-val"><span class="gain" id="m2-val">+₹2.56L</span><span class="metric-pct" id="m2-pct">(17.56%)</span></span>
             </div>
             <div class="metric-row" id="m3">
               <span class="metric-label">Total invested</span>
-              <span class="metric-val">₹9.09Cr</span>
+              <span class="metric-val" id="m3-val">₹9.09Cr</span>
             </div>
             <div class="metric-row" id="m4">
               <span class="metric-label">XIRR</span>
-              <span class="metric-val gain">9.09%</span>
+              <span class="metric-val gain" id="m4-val">9.09%</span>
             </div>
           </div>
 
@@ -655,22 +725,22 @@
               <button class="view-btn active">All holdings</button>
             </div>
             <div class="holdings-hdr">
-              <span class="holdings-count">7 FUNDS</span>
+              <span class="holdings-count" id="fund-count">7 FUNDS</span>
               <span class="holdings-sort">Current · Invested <svg width="8" height="10" viewBox="0 0 8 12" fill="none"><path d="M4 1v10M2 7l2 4 2-4" stroke="rgba(255,255,255,0.4)" stroke-width="1.3" stroke-linecap="round"/></svg></span>
             </div>
 
-            <div class="fund-item">
+            <div class="fund-item" id="fund-axis">
               <div class="fund-logo" style="background:#2a1a3a;">
                 <svg width="36" height="36" viewBox="0 0 36 36"><rect width="36" height="36" rx="10" fill="#7B3FA0"/><text x="18" y="23" text-anchor="middle" font-size="12" font-weight="800" fill="white" font-family="sans-serif">A</text></svg>
               </div>
               <div class="fund-name">Axis Midcap Fund</div>
               <div class="fund-amounts">
-                <div class="fund-current gain">₹25.34L</div>
+                <div class="fund-current gain" id="fund-axis-val" data-off="₹25.34L" data-on="₹23.10L">₹25.34L</div>
                 <div class="fund-invested">₹17.50L</div>
               </div>
             </div>
 
-            <div class="fund-item">
+            <div class="fund-item fund-w-remove" id="fund-ab">
               <div class="fund-logo" style="background:#3a1a0a;">
                 <svg width="36" height="36" viewBox="0 0 36 36"><rect width="36" height="36" rx="10" fill="#E05A1A"/><text x="18" y="23" text-anchor="middle" font-size="10" font-weight="800" fill="white" font-family="sans-serif">AB</text></svg>
               </div>
@@ -681,18 +751,18 @@
               </div>
             </div>
 
-            <div class="fund-item">
+            <div class="fund-item" id="fund-sbi">
               <div class="fund-logo" style="background:#0a1a3a;">
                 <svg width="36" height="36" viewBox="0 0 36 36"><rect width="36" height="36" rx="10" fill="#1565C0"/><circle cx="18" cy="18" r="10" fill="#1976D2"/><text x="18" y="22" text-anchor="middle" font-size="11" font-weight="900" fill="white" font-family="sans-serif">SBI</text></svg>
               </div>
               <div class="fund-name">SBI Banking &amp; Financial Services Fund</div>
               <div class="fund-amounts">
-                <div class="fund-current gain">₹28.00L</div>
+                <div class="fund-current gain" id="fund-sbi-val" data-off="₹28.00L" data-on="₹26.50L">₹28.00L</div>
                 <div class="fund-invested">₹19.00L</div>
               </div>
             </div>
 
-            <div class="fund-item">
+            <div class="fund-item fund-w-remove" id="fund-icici">
               <div class="fund-logo" style="background:#3a1a0a;">
                 <svg width="36" height="36" viewBox="0 0 36 36"><rect width="36" height="36" rx="10" fill="#E65100"/><text x="18" y="22" text-anchor="middle" font-size="10" font-weight="800" fill="white" font-family="sans-serif">ICICI</text></svg>
               </div>
@@ -703,35 +773,35 @@
               </div>
             </div>
 
-            <div class="fund-item">
+            <div class="fund-item" id="fund-mirae">
               <div class="fund-logo" style="background:#0a2a1a;">
                 <svg width="36" height="36" viewBox="0 0 36 36"><rect width="36" height="36" rx="10" fill="#1B5E20"/><text x="18" y="23" text-anchor="middle" font-size="10" font-weight="800" fill="white" font-family="sans-serif">MIR</text></svg>
               </div>
               <div class="fund-name">Mirae Asset Emerging Bluechip</div>
               <div class="fund-amounts">
-                <div class="fund-current gain">₹1.54Cr</div>
+                <div class="fund-current gain" id="fund-mirae-val" data-off="₹1.54Cr" data-on="₹1.48Cr">₹1.54Cr</div>
                 <div class="fund-invested">₹1.08Cr</div>
               </div>
             </div>
 
-            <div class="fund-item">
+            <div class="fund-item" id="fund-dsp">
               <div class="fund-logo" style="background:#1a2a3a;">
                 <svg width="36" height="36" viewBox="0 0 36 36"><rect width="36" height="36" rx="10" fill="#0277BD"/><text x="18" y="23" text-anchor="middle" font-size="11" font-weight="800" fill="white" font-family="sans-serif">DSP</text></svg>
               </div>
               <div class="fund-name">DSP Mid Cap Fund</div>
               <div class="fund-amounts">
-                <div class="fund-current gain">₹1.82Cr</div>
+                <div class="fund-current gain" id="fund-dsp-val" data-off="₹1.82Cr" data-on="₹1.75Cr">₹1.82Cr</div>
                 <div class="fund-invested">₹1.34Cr</div>
               </div>
             </div>
 
-            <div class="fund-item" style="border-bottom:none;">
+            <div class="fund-item" id="fund-pp" style="border-bottom:none;">
               <div class="fund-logo" style="background:#2a1a2a;">
                 <svg width="36" height="36" viewBox="0 0 36 36"><rect width="36" height="36" rx="10" fill="#6A1B9A"/><text x="18" y="23" text-anchor="middle" font-size="11" font-weight="800" fill="white" font-family="sans-serif">PP</text></svg>
               </div>
               <div class="fund-name">Parag Parikh Flexi Cap Fund</div>
               <div class="fund-amounts">
-                <div class="fund-current gain">₹1.04Cr</div>
+                <div class="fund-current gain" id="fund-pp-val" data-off="₹1.04Cr" data-on="₹1.04Cr">₹1.04Cr</div>
                 <div class="fund-invested">₹0.83Cr</div>
               </div>
             </div>
@@ -748,11 +818,14 @@
 
     <div class="spec-header">
       <div class="spec-badge">Iteration 11 · Handoff</div>
-      <div class="spec-title">MF Screen — W Toggle Empty State</div>
-      <div class="spec-desc">When W is toggled ON on the Mutual Funds detail screen, holdings data collapses and an empty state replaces the fund list. Value animates to zero. Reversible on W OFF.</div>
+      <div class="spec-title">MF Screen — W Toggle</div>
+      <div class="spec-desc" id="spec-desc">When W is toggled ON, ineligible funds are removed from the list, remaining fund values update, and the total recalculates. Reversible on W OFF.</div>
     </div>
 
     <div class="spec-divider"></div>
+
+    <!-- ── CASE A SPECS ── -->
+    <div data-spec-case="A">
 
     <!-- States -->
     <div class="spec-section">
@@ -762,7 +835,154 @@
           <div class="state-label off">W · OFF</div>
           <div class="state-prop"><span class="state-key">Current value</span><span class="state-val">₹13.62Cr</span></div>
           <div class="state-prop"><span class="state-key">Stats rows</span><span class="state-val green">Visible</span></div>
-          <div class="state-prop"><span class="state-key">Fund list</span><span class="state-val green">Visible</span></div>
+          <div class="state-prop"><span class="state-key">Fund list</span><span class="state-val green">7 funds visible</span></div>
+          <div class="state-prop"><span class="state-key">Toggle</span><span class="state-val muted">White dot</span></div>
+        </div>
+        <div class="state-card">
+          <div class="state-label on">W · ON</div>
+          <div class="state-prop"><span class="state-key">Current value</span><span class="state-val gold">₹11.54Cr</span></div>
+          <div class="state-prop"><span class="state-key">Stats rows</span><span class="state-val green">Updated</span></div>
+          <div class="state-prop"><span class="state-key">Fund list</span><span class="state-val muted">5 funds (2 removed)</span></div>
+          <div class="state-prop"><span class="state-key">Toggle</span><span class="state-val gold">Golden dot</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="spec-divider"></div>
+
+    <!-- Animation: W ON (Case A) -->
+    <div class="spec-section">
+      <div class="spec-section-title">Animation — W Toggle ON</div>
+      <div class="timeline">
+
+        <div class="timeline-item accent">
+          <div class="tl-timing">0 ms</div>
+          <div class="tl-dot"></div>
+          <div class="tl-body">
+            <div class="tl-name">Toggle activates</div>
+            <div class="tl-sub">W pill turns golden. Toggle dot slides right. Immediate.</div>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="tl-timing">0 – 500 ms</div>
+          <div class="tl-dot"></div>
+          <div class="tl-body">
+            <div class="tl-name">Total value counts down</div>
+            <div class="tl-sub">₹13.62Cr → ₹11.54Cr · rAF counter loop.</div>
+            <div class="tl-pill">easeOutCubic · 500ms</div>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="tl-timing">0 – 380 ms</div>
+          <div class="tl-dot"></div>
+          <div class="tl-body">
+            <div class="tl-name">Ineligible funds collapse</div>
+            <div class="tl-sub">Aditya Birla + ICICI rows: <code>max-height → 0</code> + <code>opacity → 0</code> + padding clears.</div>
+            <div class="tl-pill">ease · 380ms</div>
+          </div>
+        </div>
+
+        <div class="timeline-item gold">
+          <div class="tl-timing">220 ms</div>
+          <div class="tl-dot"></div>
+          <div class="tl-body">
+            <div class="tl-name">Remaining fund values update</div>
+            <div class="tl-sub">Current value per fund fades out → new value fades in. Stats row values swap simultaneously.</div>
+            <div class="tl-pill">opacity fade · 180ms crossfade</div>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="tl-timing">400 ms</div>
+          <div class="tl-dot"></div>
+          <div class="tl-body">
+            <div class="tl-name">Fund count updates</div>
+            <div class="tl-sub">Holdings header: "7 FUNDS" → "5 FUNDS".</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="spec-divider"></div>
+
+    <!-- Animation: W OFF (Case A) -->
+    <div class="spec-section">
+      <div class="spec-section-title">Animation — W Toggle OFF (Reverse)</div>
+      <div class="timeline">
+
+        <div class="timeline-item accent">
+          <div class="tl-timing">0 ms</div>
+          <div class="tl-dot"></div>
+          <div class="tl-body">
+            <div class="tl-name">Toggle deactivates</div>
+            <div class="tl-sub">W pill returns to white. Immediate.</div>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="tl-timing">0 – 380 ms</div>
+          <div class="tl-dot"></div>
+          <div class="tl-body">
+            <div class="tl-name">Removed funds expand back</div>
+            <div class="tl-sub"><code>max-height</code> + <code>opacity</code> restore on both fund rows.</div>
+            <div class="tl-pill">ease · 380ms</div>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="tl-timing">120 ms</div>
+          <div class="tl-dot"></div>
+          <div class="tl-body">
+            <div class="tl-name">Fund values + stats restore</div>
+            <div class="tl-sub">Opacity crossfade back to W-OFF values. Fund count → "7 FUNDS".</div>
+            <div class="tl-pill">opacity fade · 180ms crossfade</div>
+          </div>
+        </div>
+
+        <div class="timeline-item gold">
+          <div class="tl-timing">0 – 500 ms</div>
+          <div class="tl-dot"></div>
+          <div class="tl-body">
+            <div class="tl-name">Total value counts up</div>
+            <div class="tl-sub">₹11.54Cr → ₹13.62Cr.</div>
+            <div class="tl-pill">easeOutCubic · 500ms</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="spec-divider"></div>
+
+    <!-- Component specs (Case A) -->
+    <div class="spec-section">
+      <div class="spec-section-title">Component Specs</div>
+      <table class="spec-table">
+        <tr><th>Element</th><th>Property</th><th>Value</th></tr>
+        <tr><td>Summary card</td><td><code>flex-direction</code> · <code>padding</code></td><td><code>column</code> · <code>16px</code></td></tr>
+        <tr><td>Fund row collapse</td><td>via</td><td><code>max-height: 0</code> + <code>overflow: hidden</code> + <code>opacity: 0</code> + <code>padding: 0</code></td></tr>
+        <tr><td>Fund value swap</td><td>via</td><td>Opacity fade to 0, text update, fade to 1 — 180ms crossfade</td></tr>
+        <tr><td>W toggle (ON)</td><td>Track background</td><td><code>linear-gradient(135deg, #FFD98E, #C7A865)</code></td></tr>
+      </table>
+    </div>
+
+    </div><!-- /data-spec-case="A" -->
+
+    <!-- ── CASE B SPECS ── -->
+    <div data-spec-case="B" style="display:none">
+
+    <!-- States -->
+    <div class="spec-section">
+      <div class="spec-section-title">States</div>
+      <div class="states-row">
+        <div class="state-card">
+          <div class="state-label off">W · OFF</div>
+          <div class="state-prop"><span class="state-key">Current value</span><span class="state-val">₹13.62Cr</span></div>
+          <div class="state-prop"><span class="state-key">Stats rows</span><span class="state-val green">Visible</span></div>
+          <div class="state-prop"><span class="state-key">Fund list</span><span class="state-val green">7 funds visible</span></div>
           <div class="state-prop"><span class="state-key">Empty state</span><span class="state-val muted">Hidden</span></div>
           <div class="state-prop"><span class="state-key">Toggle</span><span class="state-val muted">White dot</span></div>
         </div>
@@ -779,7 +999,7 @@
 
     <div class="spec-divider"></div>
 
-    <!-- Animation: W ON -->
+    <!-- Animation: W ON (Case B) -->
     <div class="spec-section">
       <div class="spec-section-title">Animation — W Toggle ON</div>
       <div class="timeline">
@@ -789,7 +1009,7 @@
           <div class="tl-dot"></div>
           <div class="tl-body">
             <div class="tl-name">Toggle activates</div>
-            <div class="tl-sub">W pill turns golden. Toggle dot slides right.<br>Immediate — no delay.</div>
+            <div class="tl-sub">W pill turns golden. Toggle dot slides right. Immediate.</div>
           </div>
         </div>
 
@@ -798,7 +1018,7 @@
           <div class="tl-dot"></div>
           <div class="tl-body">
             <div class="tl-name">Current value counts down</div>
-            <div class="tl-sub">₹13.62Cr → ₹0.00<br>Counter animation, rAF loop.</div>
+            <div class="tl-sub">₹13.62Cr → ₹0.00 · rAF counter loop.</div>
             <div class="tl-pill">easeOutCubic · 350ms</div>
           </div>
         </div>
@@ -808,7 +1028,7 @@
           <div class="tl-dot"></div>
           <div class="tl-body">
             <div class="tl-name">Stats + divider collapse</div>
-            <div class="tl-sub">4 metric rows + dashed divider:<br><code>max-height → 0</code> + <code>opacity → 0</code> + <code>margin/padding → 0</code></div>
+            <div class="tl-sub">4 metric rows + dashed divider: <code>max-height → 0</code> + <code>opacity → 0</code> + <code>margin/padding → 0</code></div>
             <div class="tl-pill">ease · 320ms</div>
           </div>
         </div>
@@ -818,7 +1038,7 @@
           <div class="tl-dot"></div>
           <div class="tl-body">
             <div class="tl-name">Below-card fades out</div>
-            <div class="tl-sub">Updated notice, view toggle, fund list:<br><code>opacity → 0</code>. Pointer events removed.</div>
+            <div class="tl-sub">Notice, view toggle, fund list: <code>opacity → 0</code>. Pointer events removed.</div>
             <div class="tl-pill">ease · 220ms</div>
           </div>
         </div>
@@ -828,7 +1048,7 @@
           <div class="tl-dot"></div>
           <div class="tl-body">
             <div class="tl-name">Empty state fades in</div>
-            <div class="tl-sub">Blocks icon + "No Mutual Funds found" + Discover CTA.<br>Starts after stats have collapsed.</div>
+            <div class="tl-sub">Icon + "No Mutual Funds found" + Discover CTA. Starts after stats have collapsed.</div>
             <div class="tl-pill">ease · 280ms · delay 320ms</div>
           </div>
         </div>
@@ -838,7 +1058,7 @@
 
     <div class="spec-divider"></div>
 
-    <!-- Animation: W OFF -->
+    <!-- Animation: W OFF (Case B) -->
     <div class="spec-section">
       <div class="spec-section-title">Animation — W Toggle OFF (Reverse)</div>
       <div class="timeline">
@@ -848,17 +1068,17 @@
           <div class="tl-dot"></div>
           <div class="tl-body">
             <div class="tl-name">Toggle deactivates</div>
-            <div class="tl-sub">W pill returns to white/default. Immediate.</div>
+            <div class="tl-sub">W pill returns to white. Immediate.</div>
           </div>
         </div>
 
         <div class="timeline-item">
-          <div class="tl-timing">0 – 220 ms</div>
+          <div class="tl-timing">0 – 300 ms</div>
           <div class="tl-dot"></div>
           <div class="tl-body">
             <div class="tl-name">Empty state fades out</div>
             <div class="tl-sub"><code>opacity → 0</code>, then <code>display: none</code> at 300ms.</div>
-            <div class="tl-pill">ease · 220ms</div>
+            <div class="tl-pill">ease · 300ms</div>
           </div>
         </div>
 
@@ -887,66 +1107,32 @@
 
     <div class="spec-divider"></div>
 
-    <!-- Component specs -->
+    <!-- Component specs (Case B) -->
     <div class="spec-section">
       <div class="spec-section-title">Component Specs</div>
       <table class="spec-table">
         <tr><th>Element</th><th>Property</th><th>Value</th></tr>
-        <tr>
-          <td>Summary card</td>
-          <td><code>display</code> · <code>flex-direction</code> · <code>padding</code> · <code>align-items</code></td>
-          <td><code>flex</code> · <code>column</code> · <code>16px</code> · <code>flex-start</code></td>
-        </tr>
-        <tr>
-          <td>Metric rows</td>
-          <td>Collapse via</td>
-          <td><code>max-height: 0</code> + <code>overflow: hidden</code> + <code>opacity: 0</code></td>
-        </tr>
-        <tr>
-          <td>Dashed divider</td>
-          <td>Collapse via</td>
-          <td><code>max-height: 0</code> + <code>margin: 0</code> + <code>border: none</code></td>
-        </tr>
-        <tr>
-          <td>Empty state icon</td>
-          <td><code>opacity</code></td>
-          <td><code>0.25</code> (muted)</td>
-        </tr>
-        <tr>
-          <td>Discover CTA</td>
-          <td><code>border</code> · <code>border-radius</code></td>
-          <td><code>1px solid rgba(255,255,255,0.2)</code> · <code>100px</code></td>
-        </tr>
-        <tr>
-          <td>W toggle (ON)</td>
-          <td>Track background</td>
-          <td><code>linear-gradient(135deg, #FFD98E, #C7A865)</code></td>
-        </tr>
+        <tr><td>Summary card</td><td><code>flex-direction</code> · <code>padding</code></td><td><code>column</code> · <code>16px</code></td></tr>
+        <tr><td>Metric rows</td><td>Collapse via</td><td><code>max-height: 0</code> + <code>overflow: hidden</code> + <code>opacity: 0</code></td></tr>
+        <tr><td>Dashed divider</td><td>Collapse via</td><td><code>max-height: 0</code> + <code>margin: 0</code></td></tr>
+        <tr><td>Empty state</td><td>Display</td><td><code>none</code> by default · JS sets <code>flex</code> before opacity fade-in to avoid layout bleed</td></tr>
+        <tr><td>Empty state icon</td><td><code>opacity</code></td><td><code>0.25</code> (muted)</td></tr>
+        <tr><td>Discover CTA</td><td><code>border</code> · <code>border-radius</code></td><td><code>1px solid rgba(255,255,255,0.2)</code> · <code>100px</code></td></tr>
+        <tr><td>W toggle (ON)</td><td>Track background</td><td><code>linear-gradient(135deg, #FFD98E, #C7A865)</code></td></tr>
       </table>
     </div>
 
+    </div><!-- /data-spec-case="B" -->
+
     <div class="spec-divider"></div>
 
-    <!-- Notes -->
+    <!-- Shared Notes -->
     <div class="spec-section">
       <div class="spec-section-title">Notes</div>
       <table class="spec-table">
-        <tr>
-          <td>Card label</td>
-          <td>Always shows "Current value with W" — does not change on toggle.</td>
-        </tr>
-        <tr>
-          <td>Below-card</td>
-          <td>Fades out on opacity only (no height collapse). Content is preserved in DOM — instant restore when W turns OFF.</td>
-        </tr>
-        <tr>
-          <td>Empty state display</td>
-          <td>Set to <code>display: none</code> by default. JS sets <code>display: flex</code> before opacity fade-in. Avoids layout space bleed when hidden.</td>
-        </tr>
-        <tr>
-          <td>Easing function</td>
-          <td><code>easeOutCubic: t → 1 - (1-t)³</code> used for the counter animation. CSS transitions use native <code>ease</code>.</td>
-        </tr>
+        <tr><td>Card label</td><td>Always shows "Current value with W" — does not change on toggle.</td></tr>
+        <tr><td>Easing function</td><td><code>easeOutCubic: t → 1 - (1-t)³</code> for the counter animation. CSS transitions use native <code>ease</code>.</td></tr>
+        <tr><td>Case A vs B</td><td>Case is determined at data load time — not a user-facing toggle. Show Case A when ≥1 W-eligible fund exists; Case B when none exist.</td></tr>
       </table>
     </div>
 
@@ -955,46 +1141,151 @@
 
 <script>
   let wOn = false;
+  let activeCase = 'A';
+
+  const FUND_VALS = {
+    'fund-axis-val':  ['₹25.34L', '₹23.10L'],
+    'fund-sbi-val':   ['₹28.00L', '₹26.50L'],
+    'fund-mirae-val': ['₹1.54Cr', '₹1.48Cr'],
+    'fund-dsp-val':   ['₹1.82Cr', '₹1.75Cr'],
+    'fund-pp-val':    ['₹1.04Cr', '₹1.04Cr'],
+  };
+
+  const STATS = {
+    'm1-val': ['<span class="gain">+₹25.56L</span>', '<span class="gain">+₹19.84L</span>'],
+    'm1-pct': ['(12.33%)', '(10.85%)'],
+    'm2-val': ['<span class="gain">+₹2.56L</span>', '<span class="gain">+₹1.78L</span>'],
+    'm2-pct': ['(17.56%)', '(13.24%)'],
+    'm3-val': ['₹9.09Cr', '₹7.31Cr'],
+    'm4-val': ['9.09%', '8.32%'],
+  };
+
+  function switchCase(c) {
+    if (activeCase === c) return;
+    activeCase = c;
+
+    /* Reset W state instantly (no animation) */
+    if (wOn) { wOn = false; snapReset(); }
+
+    /* Update tabs */
+    document.querySelectorAll('.case-tab').forEach(t => {
+      t.classList.toggle('active', t.dataset.case === c);
+    });
+
+    /* Update spec panel */
+    document.querySelectorAll('[data-spec-case]').forEach(s => {
+      s.style.display = s.dataset.specCase === c ? '' : 'none';
+    });
+
+    /* Update header desc */
+    const descs = {
+      A: 'When W is toggled ON, ineligible funds are removed from the list, remaining fund values update, and the total recalculates. Reversible on W OFF.',
+      B: 'When W is toggled ON and no W-eligible funds exist, stats collapse, value counts to ₹0.00, and an empty state is shown. Reversible on W OFF.',
+    };
+    document.getElementById('spec-desc').textContent = descs[c];
+  }
+
+  function snapReset() {
+    document.getElementById('w-toggle').classList.remove('on');
+    document.getElementById('card-amount').textContent = '₹13.62Cr';
+
+    /* Restore fund values */
+    Object.entries(FUND_VALS).forEach(([id, vals]) => {
+      const el = document.getElementById(id);
+      if (el) { el.style.opacity = ''; el.textContent = vals[0]; }
+    });
+
+    /* Restore stats */
+    Object.entries(STATS).forEach(([id, vals]) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (id === 'm1-val' || id === 'm2-val') el.innerHTML = vals[0];
+      else el.textContent = vals[0];
+    });
+
+    /* Restore fund count + collapsed funds */
+    document.getElementById('fund-count').textContent = '7 FUNDS';
+    document.querySelectorAll('.fund-w-remove').forEach(f => f.classList.remove('w-gone'));
+
+    /* Restore stats rows */
+    document.getElementById('card-divider').classList.remove('collapsed');
+    ['m1','m2','m3','m4'].forEach(id => document.getElementById(id).classList.remove('collapsed'));
+
+    /* Hide empty state + restore below-card */
+    const es = document.getElementById('empty-state');
+    es.classList.remove('visible');
+    es.style.display = '';
+    document.getElementById('below-card').classList.remove('hidden');
+  }
+
+  function swapFundValues(toOn) {
+    const state = toOn ? 1 : 0;
+    Object.entries(FUND_VALS).forEach(([id, vals]) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.style.opacity = '0';
+      setTimeout(() => { el.textContent = vals[state]; el.style.opacity = '1'; }, 180);
+    });
+  }
+
+  function swapStats(toOn) {
+    const state = toOn ? 1 : 0;
+    Object.entries(STATS).forEach(([id, vals]) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (id === 'm1-val' || id === 'm2-val') el.innerHTML = vals[state];
+      else el.textContent = vals[state];
+    });
+  }
 
   function toggleW() {
     wOn = !wOn;
-    const toggle    = document.getElementById('w-toggle');
-    const divider   = document.getElementById('card-divider');
-    const metrics   = [document.getElementById('m1'), document.getElementById('m2'), document.getElementById('m3'), document.getElementById('m4')];
-    const belowCard = document.getElementById('below-card');
-    const emptyState= document.getElementById('empty-state');
+    document.getElementById('w-toggle').classList.toggle('on', wOn);
 
-    toggle.classList.toggle('on', wOn);
+    if (activeCase === 'A') {
+      const removed = document.querySelectorAll('.fund-w-remove');
+      const countEl = document.getElementById('fund-count');
 
-    if (wOn) {
-      /* Count value down */
-      animateAmount(13.62, 0, 350);
-
-      /* Collapse stats */
-      divider.classList.add('collapsed');
-      metrics.forEach(m => m.classList.add('collapsed'));
-
-      /* Fade below-card */
-      belowCard.classList.add('hidden');
-
-      /* Fade in empty state */
-      setTimeout(() => {
-        emptyState.style.display = 'flex';
-        requestAnimationFrame(() => emptyState.classList.add('visible'));
-      }, 320);
+      if (wOn) {
+        animateAmount(13.62, 11.54, 500);
+        removed.forEach(f => f.classList.add('w-gone'));
+        setTimeout(() => swapFundValues(true), 220);
+        setTimeout(() => swapStats(true), 200);
+        setTimeout(() => { countEl.textContent = '5 FUNDS'; }, 400);
+      } else {
+        animateAmount(11.54, 13.62, 500);
+        removed.forEach(f => f.classList.remove('w-gone'));
+        setTimeout(() => swapFundValues(false), 120);
+        setTimeout(() => swapStats(false), 100);
+        setTimeout(() => { countEl.textContent = '7 FUNDS'; }, 300);
+      }
 
     } else {
-      /* Hide empty state */
-      emptyState.classList.remove('visible');
-      setTimeout(() => { emptyState.style.display = ''; }, 300);
+      /* Case B — empty state */
+      const divider  = document.getElementById('card-divider');
+      const metrics  = ['m1','m2','m3','m4'].map(id => document.getElementById(id));
+      const belowCard = document.getElementById('below-card');
+      const emptyState = document.getElementById('empty-state');
 
-      /* Restore */
-      setTimeout(() => {
-        divider.classList.remove('collapsed');
-        metrics.forEach(m => m.classList.remove('collapsed'));
-        belowCard.classList.remove('hidden');
-        animateAmount(0, 13.62, 380);
-      }, 220);
+      if (wOn) {
+        animateAmount(13.62, 0, 350);
+        divider.classList.add('collapsed');
+        metrics.forEach(m => m.classList.add('collapsed'));
+        belowCard.classList.add('hidden');
+        setTimeout(() => {
+          emptyState.style.display = 'flex';
+          requestAnimationFrame(() => emptyState.classList.add('visible'));
+        }, 320);
+      } else {
+        emptyState.classList.remove('visible');
+        setTimeout(() => { emptyState.style.display = ''; }, 300);
+        setTimeout(() => {
+          divider.classList.remove('collapsed');
+          metrics.forEach(m => m.classList.remove('collapsed'));
+          belowCard.classList.remove('hidden');
+          animateAmount(0, 13.62, 380);
+        }, 220);
+      }
     }
   }
 
@@ -1010,6 +1301,7 @@
     }
     requestAnimationFrame(tick);
   }
+</script>
 </script>
 </body>
 </html>
