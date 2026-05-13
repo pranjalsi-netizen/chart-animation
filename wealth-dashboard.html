@@ -970,13 +970,19 @@
     body.iter-11 .mf-w-collapsible {
       overflow: hidden;
       max-height: 48px;
-      transition: max-height 0.32s ease, opacity 0.25s ease, margin 0.32s ease;
+      transition: max-height 0.32s ease, opacity 0.25s ease, margin 0.32s ease, padding 0.32s ease, border 0.32s ease;
     }
     body.iter-11 .mf-w-collapsible.w-hidden {
       max-height: 0 !important;
       opacity: 0;
-      margin-top: 0 !important;
-      margin-bottom: 0 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border: none !important;
+    }
+    body.iter-11 .mf-summary-card {
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 16px;
     }
     body.iter-11 .mf-below-card { transition: opacity 0.22s ease; }
     body.iter-11 .mf-below-card.w-hidden { opacity: 0; pointer-events: none; }
@@ -990,7 +996,7 @@
       opacity: 0;
       transition: opacity 0.28s ease;
     }
-    body.iter-11 .mf-empty-state         { display: flex; }
+    /* display controlled by JS — no auto-flex in iter-11 to avoid layout space */
     body.iter-11 .mf-empty-state.visible { opacity: 1; }
     .mf-empty-icon  { opacity: 0.3; }
     .mf-empty-title {
@@ -3228,12 +3234,18 @@ window.simFire = function () {
 
       /* fade in empty state after content is gone */
       setTimeout(() => {
-        if (emptyState) emptyState.classList.add('visible');
+        if (emptyState) {
+          emptyState.style.display = 'flex';
+          requestAnimationFrame(() => emptyState.classList.add('visible'));
+        }
       }, 320);
 
     } else {
       /* hide empty state */
-      if (emptyState) emptyState.classList.remove('visible');
+      if (emptyState) {
+        emptyState.classList.remove('visible');
+        setTimeout(() => { emptyState.style.display = ''; }, 300);
+      }
 
       /* expand stats + show below-card after empty fades */
       setTimeout(() => {
@@ -3526,7 +3538,7 @@ window.simFire = function () {
         const bc = panel.querySelector('.mf-below-card');
         if (bc) bc.classList.remove('w-hidden');
         const es = panel.querySelector('.mf-empty-state');
-        if (es) es.classList.remove('visible');
+        if (es) { es.classList.remove('visible'); es.style.display = ''; }
         const amt = panel.querySelector('.mf-card-amount');
         if (amt) amt.textContent = '₹13.62Cr';
       }

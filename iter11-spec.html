@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Iter 11 — MF W Toggle · Handoff Spec</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0A0C0E;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    color: #F2F5F7;
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* ── Layout ── */
+  .layout {
+    display: flex;
+    width: 100%;
+    min-height: 100vh;
+  }
+
+  /* ── Left: Phone column ── */
+  .phone-col {
+    width: 420px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 40px 24px;
+    border-right: 1px solid rgba(255,255,255,0.06);
+    background: #0D0F11;
+  }
+
+  .phone-col-label {
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.3);
+    margin-bottom: 24px;
+    align-self: flex-start;
+  }
+
+  /* Phone frame */
+  .phone {
+    width: 375px;
+    background: #060809;
+    border-radius: 44px;
+    border: 1.5px solid rgba(255,255,255,0.1);
+    overflow: hidden;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.7);
+    position: relative;
+  }
+
+  /* ── MF Screen ── */
+  .mf-screen {
+    display: flex;
+    flex-direction: column;
+    height: 812px;
+    overflow: hidden;
+  }
+
+  /* Status bar */
+  .status-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 24px 4px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #F2F5F7;
+    flex-shrink: 0;
+  }
+  .status-icons { display: flex; gap: 6px; align-items: center; }
+
+  /* Nav */
+  .mf-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px 12px;
+    flex-shrink: 0;
+  }
+  .nav-back {
+    width: 36px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+  }
+  .nav-user {
+    display: flex; align-items: center; gap: 8px;
+    background: #1A1D1F; border-radius: 100px;
+    padding: 6px 12px;
+    font-size: 13px; font-weight: 600;
+    color: #F2F5F7;
+  }
+  .nav-user img { width: 20px; height: 20px; border-radius: 50%; background: #7B72E9; }
+  .nav-eye {
+    width: 36px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+  }
+
+  /* Tabs */
+  .mf-tabs {
+    display: flex;
+    padding: 0 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    flex-shrink: 0;
+  }
+  .mf-tab {
+    padding: 10px 14px;
+    font-size: 14px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.45);
+    position: relative;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .mf-tab.active {
+    color: #7B72E9;
+  }
+  .mf-tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px; left: 0; right: 0;
+    height: 2px;
+    background: #7B72E9;
+    border-radius: 2px 2px 0 0;
+  }
+
+  /* Scrollable content area */
+  .mf-content {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    scrollbar-width: none;
+  }
+  .mf-content::-webkit-scrollbar { display: none; }
+
+  /* Summary card */
+  .summary-card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+    padding: 16px;
+    background: #151819;
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.06);
+    backdrop-filter: blur(7.5px);
+    flex-shrink: 0;
+  }
+
+  .card-top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    width: 100%;
+    margin-bottom: 4px;
+  }
+  .card-label {
+    font-size: 12px;
+    color: rgba(255,255,255,0.45);
+    font-weight: 400;
+    margin-bottom: 4px;
+  }
+  .card-amount {
+    font-size: 30px;
+    font-weight: 600;
+    color: #F2F5F7;
+    letter-spacing: -0.5px;
+    line-height: 1.1;
+  }
+  .card-icons {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .icon-btn {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.15);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    background: transparent;
+  }
+
+  /* W Toggle */
+  .w-toggle {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: #1E2224;
+    border-radius: 100px;
+    padding: 5px 8px;
+    cursor: pointer;
+    border: 1px solid rgba(255,255,255,0.1);
+    user-select: none;
+    transition: border-color 0.3s ease, background 0.3s ease;
+  }
+  .w-toggle.on {
+    background: rgba(199,168,101,0.12);
+    border-color: rgba(199,168,101,0.3);
+  }
+  .w-letter {
+    font-size: 13px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.4);
+    transition: color 0.3s ease;
+  }
+  .w-toggle.on .w-letter {
+    background: linear-gradient(135deg, #FFD98E 0%, #C7A865 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .toggle-track {
+    width: 28px; height: 16px;
+    background: #333;
+    border-radius: 100px;
+    position: relative;
+    transition: background 0.3s ease;
+  }
+  .w-toggle.on .toggle-track {
+    background: linear-gradient(135deg, #FFD98E 0%, #C7A865 100%);
+  }
+  .toggle-dot {
+    width: 12px; height: 12px;
+    background: #fff;
+    border-radius: 50%;
+    position: absolute;
+    top: 2px; left: 2px;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .w-toggle.on .toggle-dot { transform: translateX(12px); }
+
+  /* Stats (collapsible) */
+  .card-divider {
+    width: 100%;
+    border: none;
+    border-top: 1px dashed rgba(255,255,255,0.12);
+    margin: 14px 0;
+    overflow: hidden;
+    max-height: 1px;
+    transition: max-height 0.32s ease, opacity 0.25s ease, margin 0.32s ease;
+  }
+  .card-divider.collapsed {
+    max-height: 0; opacity: 0; margin: 0;
+  }
+
+  .metric-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    overflow: hidden;
+    max-height: 40px;
+    transition: max-height 0.32s ease, opacity 0.25s ease, margin 0.32s ease, padding 0.32s ease;
+  }
+  .metric-row.collapsed {
+    max-height: 0; opacity: 0; padding: 0; margin: 0;
+  }
+  .metric-label { font-size: 13px; color: rgba(255,255,255,0.45); }
+  .metric-val   { font-size: 13px; font-weight: 500; color: #F2F5F7; }
+  .metric-pct   { font-size: 11px; color: rgba(255,255,255,0.35); margin-left: 4px; }
+  .gain { color: #04B488; }
+
+  /* Below-card wrapper */
+  .below-card {
+    display: flex;
+    flex-direction: column;
+    transition: opacity 0.22s ease;
+  }
+  .below-card.hidden { opacity: 0; pointer-events: none; }
+
+  /* Updated notice */
+  .updated-notice {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 4px;
+    font-size: 12px;
+    color: rgba(255,255,255,0.4);
+  }
+
+  /* View toggle */
+  .view-toggle {
+    display: flex;
+    background: #1A1D1F;
+    border-radius: 100px;
+    padding: 4px;
+    margin: 4px 0 16px;
+  }
+  .view-btn {
+    flex: 1;
+    padding: 8px 16px;
+    border-radius: 100px;
+    border: none;
+    background: transparent;
+    color: rgba(255,255,255,0.45);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  .view-btn.active {
+    background: #2A2D30;
+    color: #F2F5F7;
+    font-weight: 600;
+  }
+
+  /* Holdings header */
+  .holdings-hdr {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 0 12px;
+  }
+  .holdings-count { font-size: 11px; font-weight: 700; letter-spacing: 1px; color: rgba(255,255,255,0.45); }
+  .holdings-sort  { font-size: 12px; color: rgba(255,255,255,0.45); display: flex; align-items: center; gap: 4px; }
+
+  /* Fund items */
+  .fund-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px dashed rgba(255,255,255,0.08);
+  }
+  .fund-logo {
+    width: 40px; height: 40px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    font-size: 11px; font-weight: 800;
+  }
+  .fund-name { flex: 1; font-size: 13px; color: #F2F5F7; line-height: 1.4; }
+  .fund-amounts { text-align: right; }
+  .fund-current { font-size: 13px; font-weight: 600; }
+  .fund-invested { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 2px; }
+  .gain { color: #04B488; }
+  .loss { color: #FF8C42; }
+
+  /* Empty state */
+  .empty-state {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 48px 24px 32px;
+    opacity: 0;
+    transition: opacity 0.28s ease;
+  }
+  .empty-state.visible { opacity: 1; }
+  .empty-icon { opacity: 0.25; }
+  .empty-title {
+    font-size: 15px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.55);
+  }
+  .discover-btn {
+    display: flex; align-items: center; gap: 8px;
+    padding: 11px 24px;
+    border-radius: 100px;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: transparent;
+    color: #F2F5F7;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  /* ── Right: Spec panel ── */
+  .spec-panel {
+    flex: 1;
+    padding: 40px 48px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+
+  .spec-header { }
+  .spec-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(123,114,233,0.15);
+    border: 1px solid rgba(123,114,233,0.3);
+    border-radius: 100px;
+    padding: 4px 12px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #7B72E9;
+    margin-bottom: 16px;
+  }
+  .spec-title {
+    font-size: 26px;
+    font-weight: 700;
+    color: #F2F5F7;
+    line-height: 1.2;
+    margin-bottom: 8px;
+  }
+  .spec-desc {
+    font-size: 14px;
+    color: rgba(255,255,255,0.5);
+    line-height: 1.6;
+    max-width: 520px;
+  }
+
+  /* Section */
+  .spec-section { }
+  .spec-section-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.3);
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+
+  /* Timeline */
+  .timeline { display: flex; flex-direction: column; gap: 0; }
+  .timeline-item {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    gap: 0 20px;
+    position: relative;
+    padding-bottom: 24px;
+  }
+  .timeline-item:last-child { padding-bottom: 0; }
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    left: 108px;
+    top: 10px; bottom: 0;
+    width: 1px;
+    background: rgba(255,255,255,0.08);
+  }
+  .timeline-item:last-child::before { display: none; }
+
+  .tl-timing {
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.3);
+    padding-top: 2px;
+    text-align: right;
+  }
+  .tl-dot {
+    position: absolute;
+    left: 103px;
+    top: 4px;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: #2A2D30;
+    border: 2px solid rgba(255,255,255,0.15);
+  }
+  .timeline-item.accent .tl-dot { background: #7B72E9; border-color: #7B72E9; }
+  .timeline-item.gold .tl-dot   { background: #C7A865; border-color: #C7A865; }
+
+  .tl-body { padding-left: 12px; }
+  .tl-name { font-size: 13px; font-weight: 600; color: #F2F5F7; margin-bottom: 4px; }
+  .tl-sub  { font-size: 12px; color: rgba(255,255,255,0.4); line-height: 1.5; }
+  .tl-pill {
+    display: inline-block;
+    background: rgba(255,255,255,0.06);
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 11px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    color: rgba(255,255,255,0.55);
+    margin-top: 4px;
+  }
+
+  /* State cards */
+  .states-row { display: flex; gap: 16px; }
+  .state-card {
+    flex: 1;
+    background: #141618;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 16px;
+    padding: 20px;
+  }
+  .state-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .state-label.off { color: rgba(255,255,255,0.35); }
+  .state-label.on  { color: #C7A865; }
+
+  .state-prop { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .state-key  { font-size: 12px; color: rgba(255,255,255,0.4); }
+  .state-val  { font-size: 12px; font-weight: 600; color: #F2F5F7; }
+  .state-val.green { color: #04B488; }
+  .state-val.gold  { color: #C7A865; }
+  .state-val.muted { color: rgba(255,255,255,0.35); }
+
+  /* Spec table */
+  .spec-table { width: 100%; border-collapse: collapse; }
+  .spec-table th {
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.3);
+    padding: 0 0 10px;
+  }
+  .spec-table td {
+    padding: 10px 0;
+    font-size: 13px;
+    color: rgba(255,255,255,0.7);
+    border-top: 1px solid rgba(255,255,255,0.05);
+    vertical-align: top;
+  }
+  .spec-table td:first-child { color: #F2F5F7; font-weight: 500; width: 160px; padding-right: 16px; }
+  code {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 11px;
+    background: rgba(255,255,255,0.06);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: rgba(255,255,255,0.7);
+  }
+
+  /* Divider */
+  .spec-divider {
+    width: 100%;
+    height: 1px;
+    background: rgba(255,255,255,0.06);
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- ── LEFT: Phone prototype ── -->
+  <div class="phone-col">
+    <div class="phone-col-label">Interactive prototype</div>
+    <div class="phone">
+      <div class="mf-screen">
+
+        <!-- Status bar -->
+        <div class="status-bar">
+          <span>10:00</span>
+          <div class="status-icons">
+            <svg width="16" height="12" viewBox="0 0 16 12" fill="#F2F5F7"><path d="M1 9h2v3H1zM5 6h2v6H5zM9 3h2v9H9zM13 0h2v12h-2z" opacity=".9"/></svg>
+            <svg width="16" height="12" viewBox="0 0 16 12" fill="none"><path d="M8 2C5.2 2 2.7 3.2 1 5.2L2.5 6.7C3.8 5.1 5.8 4 8 4s4.2 1.1 5.5 2.7L15 5.2C13.3 3.2 10.8 2 8 2z" fill="#F2F5F7"/><path d="M8 6C6.3 6 4.8 6.8 3.8 8L5.3 9.5C6 8.6 6.9 8 8 8s2 .6 2.7 1.5L12.2 8C11.2 6.8 9.7 6 8 6z" fill="#F2F5F7"/><circle cx="8" cy="11" r="1.5" fill="#F2F5F7"/></svg>
+            <svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x=".5" y=".5" width="21" height="11" rx="3.5" stroke="#F2F5F7" stroke-opacity=".35"/><rect x="2" y="2" width="15" height="8" rx="2" fill="#F2F5F7"/><path d="M23 4v4a2 2 0 000-4z" fill="#F2F5F7" fill-opacity=".4"/></svg>
+          </div>
+        </div>
+
+        <!-- Nav -->
+        <div class="mf-nav">
+          <div class="nav-back">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12 5l-5 5 5 5" stroke="#F2F5F7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div class="nav-user">
+            <svg width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="10" r="10" fill="#7B72E9"/><text x="10" y="14" text-anchor="middle" font-size="9" font-weight="700" fill="white" font-family="sans-serif">NK</text></svg>
+            NIKITHA K.
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 5l3 3 3-3" stroke="#F2F5F7" stroke-width="1.4" stroke-linecap="round"/></svg>
+          </div>
+          <div class="nav-eye">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 4C5 4 2 10 2 10s3 6 8 6 8-6 8-6-3-6-8-6z" stroke="#F2F5F7" stroke-width="1.5"/><circle cx="10" cy="10" r="2.5" stroke="#F2F5F7" stroke-width="1.5"/></svg>
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="mf-tabs">
+          <div class="mf-tab active">Mutual Funds</div>
+          <div class="mf-tab">Stocks &amp; ETFs</div>
+          <div class="mf-tab">AIF</div>
+          <div class="mf-tab">PMS</div>
+        </div>
+
+        <!-- Scrollable content -->
+        <div class="mf-content" id="mf-content">
+
+          <!-- Summary card -->
+          <div class="summary-card" id="summary-card">
+            <div class="card-top-row">
+              <div>
+                <div class="card-label">Current value with W</div>
+                <div class="card-amount" id="card-amount">₹13.62Cr</div>
+              </div>
+              <div class="card-icons">
+                <div class="icon-btn">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M14 8A6 6 0 112 8" stroke="rgba(255,255,255,0.6)" stroke-width="1.5" stroke-linecap="round"/><path d="M14 8l-2-2M14 8l-2 2" stroke="rgba(255,255,255,0.6)" stroke-width="1.5" stroke-linecap="round"/></svg>
+                </div>
+                <div class="icon-btn">
+                  <svg width="14" height="4" viewBox="0 0 14 4" fill="rgba(255,255,255,0.6)"><circle cx="2" cy="2" r="1.8"/><circle cx="7" cy="2" r="1.8"/><circle cx="12" cy="2" r="1.8"/></svg>
+                </div>
+                <div class="w-toggle" id="w-toggle" onclick="toggleW()">
+                  <span class="w-letter">W</span>
+                  <div class="toggle-track"><div class="toggle-dot"></div></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Collapsibles -->
+            <hr class="card-divider" id="card-divider">
+            <div class="metric-row" id="m1">
+              <span class="metric-label">1D returns</span>
+              <span class="metric-val"><span class="gain">+₹25.56L</span><span class="metric-pct">12.33%</span></span>
+            </div>
+            <div class="metric-row" id="m2">
+              <span class="metric-label">Total returns</span>
+              <span class="metric-val"><span class="gain">+₹2.56L</span><span class="metric-pct">17.56%</span></span>
+            </div>
+            <div class="metric-row" id="m3">
+              <span class="metric-label">Total invested</span>
+              <span class="metric-val">₹9.09Cr</span>
+            </div>
+            <div class="metric-row" id="m4">
+              <span class="metric-label">XIRR</span>
+              <span class="metric-val gain">9.09%</span>
+            </div>
+          </div>
+
+          <!-- Empty state (hidden until W ON) -->
+          <div class="empty-state" id="empty-state">
+            <svg class="empty-icon" width="64" height="52" viewBox="0 0 64 52" fill="none">
+              <rect x="16" y="28" width="32" height="18" rx="5" fill="rgba(255,255,255,0.7)"/>
+              <rect x="4"  y="18" width="32" height="18" rx="5" fill="rgba(255,255,255,0.5)"/>
+              <rect x="28" y="18" width="32" height="18" rx="5" fill="rgba(255,255,255,0.5)"/>
+              <rect x="16" y="8"  width="32" height="18" rx="5" fill="rgba(255,255,255,0.3)"/>
+            </svg>
+            <div class="empty-title">No Mutual Funds found</div>
+            <button class="discover-btn">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="#F2F5F7" stroke-width="1.2"/><path d="M8 1C8 1 5.5 4 5.5 8S8 15 8 15M8 1c0 0 2.5 3 2.5 7S8 15 8 15M1 8h14" stroke="#F2F5F7" stroke-width="1.2" stroke-linecap="round"/></svg>
+              Discover
+            </button>
+          </div>
+
+          <!-- Below-card content -->
+          <div class="below-card" id="below-card">
+            <div class="updated-notice">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="#04B488" stroke-width="1.2"/><path d="M5 8l2.5 2.5L11 5.5" stroke="#04B488" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Your portfolio was updated today
+            </div>
+            <div class="view-toggle">
+              <button class="view-btn">Insights</button>
+              <button class="view-btn active">All holdings</button>
+            </div>
+            <div class="holdings-hdr">
+              <span class="holdings-count">7 FUNDS</span>
+              <span class="holdings-sort">Current · Invested <svg width="8" height="10" viewBox="0 0 8 12" fill="none"><path d="M4 1v10M2 7l2 4 2-4" stroke="rgba(255,255,255,0.4)" stroke-width="1.3" stroke-linecap="round"/></svg></span>
+            </div>
+
+            <div class="fund-item">
+              <div class="fund-logo" style="background:#2a1a3a;">
+                <svg width="36" height="36" viewBox="0 0 36 36"><rect width="36" height="36" rx="10" fill="#7B3FA0"/><text x="18" y="23" text-anchor="middle" font-size="12" font-weight="800" fill="white" font-family="sans-serif">A</text></svg>
+              </div>
+              <div class="fund-name">Axis Midcap Fund</div>
+              <div class="fund-amounts">
+                <div class="fund-current gain">₹25.34L</div>
+                <div class="fund-invested">₹17.50L</div>
+              </div>
+            </div>
+
+            <div class="fund-item">
+              <div class="fund-logo" style="background:#3a1a0a;">
+                <svg width="36" height="36" viewBox="0 0 36 36"><rect width="36" height="36" rx="10" fill="#E05A1A"/><text x="18" y="23" text-anchor="middle" font-size="10" font-weight="800" fill="white" font-family="sans-serif">AB</text></svg>
+              </div>
+              <div class="fund-name">Aditya Birla Sun Life Psu Equity Fund</div>
+              <div class="fund-amounts">
+                <div class="fund-current loss">₹15.34L</div>
+                <div class="fund-invested">₹21.00L</div>
+              </div>
+            </div>
+
+            <div class="fund-item">
+              <div class="fund-logo" style="background:#0a1a3a;">
+                <svg width="36" height="36" viewBox="0 0 36 36"><rect width="36" height="36" rx="10" fill="#1565C0"/><circle cx="18" cy="18" r="10" fill="#1976D2"/><text x="18" y="22" text-anchor="middle" font-size="11" font-weight="900" fill="white" font-family="sans-serif">SBI</text></svg>
+              </div>
+              <div class="fund-name">SBI Banking &amp; Financial Services Fund</div>
+              <div class="fund-amounts">
+                <div class="fund-current gain">₹28.00L</div>
+                <div class="fund-invested">₹19.00L</div>
+              </div>
+            </div>
+
+            <div class="fund-item">
+              <div class="fund-logo" style="background:#3a1a0a;">
+                <svg width="36" height="36" viewBox="0 0 36 36"><rect width="36" height="36" rx="10" fill="#E65100"/><text x="18" y="22" text-anchor="middle" font-size="10" font-weight="800" fill="white" font-family="sans-serif">ICICI</text></svg>
+              </div>
+              <div class="fund-name">ICICI Prudential Technology Fund</div>
+              <div class="fund-amounts">
+                <div class="fund-current loss">₹16.00L</div>
+                <div class="fund-invested">₹24.00L</div>
+              </div>
+            </div>
+
+            <div class="fund-item">
+              <div class="fund-logo" style="background:#0a2a1a;">
+                <svg width="36" height="36" viewBox="0 0 36 36"><rect width="36" height="36" rx="10" fill="#1B5E20"/><text x="18" y="23" text-anchor="middle" font-size="10" font-weight="800" fill="white" font-family="sans-serif">MIR</text></svg>
+              </div>
+              <div class="fund-name">Mirae Asset Emerging Bluechip</div>
+              <div class="fund-amounts">
+                <div class="fund-current gain">₹1.54Cr</div>
+                <div class="fund-invested">₹1.08Cr</div>
+              </div>
+            </div>
+
+            <div class="fund-item">
+              <div class="fund-logo" style="background:#1a2a3a;">
+                <svg width="36" height="36" viewBox="0 0 36 36"><rect width="36" height="36" rx="10" fill="#0277BD"/><text x="18" y="23" text-anchor="middle" font-size="11" font-weight="800" fill="white" font-family="sans-serif">DSP</text></svg>
+              </div>
+              <div class="fund-name">DSP Mid Cap Fund</div>
+              <div class="fund-amounts">
+                <div class="fund-current gain">₹1.82Cr</div>
+                <div class="fund-invested">₹1.34Cr</div>
+              </div>
+            </div>
+
+            <div class="fund-item" style="border-bottom:none;">
+              <div class="fund-logo" style="background:#2a1a2a;">
+                <svg width="36" height="36" viewBox="0 0 36 36"><rect width="36" height="36" rx="10" fill="#6A1B9A"/><text x="18" y="23" text-anchor="middle" font-size="11" font-weight="800" fill="white" font-family="sans-serif">PP</text></svg>
+              </div>
+              <div class="fund-name">Parag Parikh Flexi Cap Fund</div>
+              <div class="fund-amounts">
+                <div class="fund-current gain">₹1.04Cr</div>
+                <div class="fund-invested">₹0.83Cr</div>
+              </div>
+            </div>
+
+          </div><!-- /below-card -->
+        </div><!-- /mf-content -->
+      </div><!-- /mf-screen -->
+    </div><!-- /phone -->
+  </div><!-- /phone-col -->
+
+
+  <!-- ── RIGHT: Spec panel ── -->
+  <div class="spec-panel">
+
+    <div class="spec-header">
+      <div class="spec-badge">Iteration 11 · Handoff</div>
+      <div class="spec-title">MF Screen — W Toggle Empty State</div>
+      <div class="spec-desc">When W is toggled ON on the Mutual Funds detail screen, holdings data collapses and an empty state replaces the fund list. Value animates to zero. Reversible on W OFF.</div>
+    </div>
+
+    <div class="spec-divider"></div>
+
+    <!-- States -->
+    <div class="spec-section">
+      <div class="spec-section-title">States</div>
+      <div class="states-row">
+        <div class="state-card">
+          <div class="state-label off">W · OFF</div>
+          <div class="state-prop"><span class="state-key">Current value</span><span class="state-val">₹13.62Cr</span></div>
+          <div class="state-prop"><span class="state-key">Stats rows</span><span class="state-val green">Visible</span></div>
+          <div class="state-prop"><span class="state-key">Fund list</span><span class="state-val green">Visible</span></div>
+          <div class="state-prop"><span class="state-key">Empty state</span><span class="state-val muted">Hidden</span></div>
+          <div class="state-prop"><span class="state-key">Toggle</span><span class="state-val muted">White dot</span></div>
+        </div>
+        <div class="state-card">
+          <div class="state-label on">W · ON</div>
+          <div class="state-prop"><span class="state-key">Current value</span><span class="state-val gold">₹0.00</span></div>
+          <div class="state-prop"><span class="state-key">Stats rows</span><span class="state-val muted">Collapsed</span></div>
+          <div class="state-prop"><span class="state-key">Fund list</span><span class="state-val muted">Hidden</span></div>
+          <div class="state-prop"><span class="state-key">Empty state</span><span class="state-val green">Visible</span></div>
+          <div class="state-prop"><span class="state-key">Toggle</span><span class="state-val gold">Golden dot</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="spec-divider"></div>
+
+    <!-- Animation: W ON -->
+    <div class="spec-section">
+      <div class="spec-section-title">Animation — W Toggle ON</div>
+      <div class="timeline">
+
+        <div class="timeline-item accent">
+          <div class="tl-timing">0 ms</div>
+          <div class="tl-dot"></div>
+          <div class="tl-body">
+            <div class="tl-name">Toggle activates</div>
+            <div class="tl-sub">W pill turns golden. Toggle dot slides right.<br>Immediate — no delay.</div>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="tl-timing">0 – 350 ms</div>
+          <div class="tl-dot"></div>
+          <div class="tl-body">
+            <div class="tl-name">Current value counts down</div>
+            <div class="tl-sub">₹13.62Cr → ₹0.00<br>Counter animation, rAF loop.</div>
+            <div class="tl-pill">easeOutCubic · 350ms</div>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="tl-timing">0 – 320 ms</div>
+          <div class="tl-dot"></div>
+          <div class="tl-body">
+            <div class="tl-name">Stats + divider collapse</div>
+            <div class="tl-sub">4 metric rows + dashed divider:<br><code>max-height → 0</code> + <code>opacity → 0</code> + <code>margin/padding → 0</code></div>
+            <div class="tl-pill">ease · 320ms</div>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="tl-timing">0 – 220 ms</div>
+          <div class="tl-dot"></div>
+          <div class="tl-body">
+            <div class="tl-name">Below-card fades out</div>
+            <div class="tl-sub">Updated notice, view toggle, fund list:<br><code>opacity → 0</code>. Pointer events removed.</div>
+            <div class="tl-pill">ease · 220ms</div>
+          </div>
+        </div>
+
+        <div class="timeline-item gold">
+          <div class="tl-timing">320 – 600 ms</div>
+          <div class="tl-dot"></div>
+          <div class="tl-body">
+            <div class="tl-name">Empty state fades in</div>
+            <div class="tl-sub">Blocks icon + "No Mutual Funds found" + Discover CTA.<br>Starts after stats have collapsed.</div>
+            <div class="tl-pill">ease · 280ms · delay 320ms</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="spec-divider"></div>
+
+    <!-- Animation: W OFF -->
+    <div class="spec-section">
+      <div class="spec-section-title">Animation — W Toggle OFF (Reverse)</div>
+      <div class="timeline">
+
+        <div class="timeline-item accent">
+          <div class="tl-timing">0 ms</div>
+          <div class="tl-dot"></div>
+          <div class="tl-body">
+            <div class="tl-name">Toggle deactivates</div>
+            <div class="tl-sub">W pill returns to white/default. Immediate.</div>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="tl-timing">0 – 220 ms</div>
+          <div class="tl-dot"></div>
+          <div class="tl-body">
+            <div class="tl-name">Empty state fades out</div>
+            <div class="tl-sub"><code>opacity → 0</code>, then <code>display: none</code> at 300ms.</div>
+            <div class="tl-pill">ease · 220ms</div>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="tl-timing">220 – 540 ms</div>
+          <div class="tl-dot"></div>
+          <div class="tl-body">
+            <div class="tl-name">Stats + below-card restore</div>
+            <div class="tl-sub">Stats expand via <code>max-height</code>. Below-card <code>opacity → 1</code>. Starts after empty state gone.</div>
+            <div class="tl-pill">ease · 320ms · delay 220ms</div>
+          </div>
+        </div>
+
+        <div class="timeline-item gold">
+          <div class="tl-timing">220 – 600 ms</div>
+          <div class="tl-dot"></div>
+          <div class="tl-body">
+            <div class="tl-name">Current value counts up</div>
+            <div class="tl-sub">₹0.00 → ₹13.62Cr, starts with stats expansion.</div>
+            <div class="tl-pill">easeOutCubic · 380ms · delay 220ms</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="spec-divider"></div>
+
+    <!-- Component specs -->
+    <div class="spec-section">
+      <div class="spec-section-title">Component Specs</div>
+      <table class="spec-table">
+        <tr><th>Element</th><th>Property</th><th>Value</th></tr>
+        <tr>
+          <td>Summary card</td>
+          <td><code>display</code> · <code>flex-direction</code> · <code>padding</code> · <code>align-items</code></td>
+          <td><code>flex</code> · <code>column</code> · <code>16px</code> · <code>flex-start</code></td>
+        </tr>
+        <tr>
+          <td>Metric rows</td>
+          <td>Collapse via</td>
+          <td><code>max-height: 0</code> + <code>overflow: hidden</code> + <code>opacity: 0</code></td>
+        </tr>
+        <tr>
+          <td>Dashed divider</td>
+          <td>Collapse via</td>
+          <td><code>max-height: 0</code> + <code>margin: 0</code> + <code>border: none</code></td>
+        </tr>
+        <tr>
+          <td>Empty state icon</td>
+          <td><code>opacity</code></td>
+          <td><code>0.25</code> (muted)</td>
+        </tr>
+        <tr>
+          <td>Discover CTA</td>
+          <td><code>border</code> · <code>border-radius</code></td>
+          <td><code>1px solid rgba(255,255,255,0.2)</code> · <code>100px</code></td>
+        </tr>
+        <tr>
+          <td>W toggle (ON)</td>
+          <td>Track background</td>
+          <td><code>linear-gradient(135deg, #FFD98E, #C7A865)</code></td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="spec-divider"></div>
+
+    <!-- Notes -->
+    <div class="spec-section">
+      <div class="spec-section-title">Notes</div>
+      <table class="spec-table">
+        <tr>
+          <td>Card label</td>
+          <td>Always shows "Current value with W" — does not change on toggle.</td>
+        </tr>
+        <tr>
+          <td>Below-card</td>
+          <td>Fades out on opacity only (no height collapse). Content is preserved in DOM — instant restore when W turns OFF.</td>
+        </tr>
+        <tr>
+          <td>Empty state display</td>
+          <td>Set to <code>display: none</code> by default. JS sets <code>display: flex</code> before opacity fade-in. Avoids layout space bleed when hidden.</td>
+        </tr>
+        <tr>
+          <td>Easing function</td>
+          <td><code>easeOutCubic: t → 1 - (1-t)³</code> used for the counter animation. CSS transitions use native <code>ease</code>.</td>
+        </tr>
+      </table>
+    </div>
+
+  </div><!-- /spec-panel -->
+</div><!-- /layout -->
+
+<script>
+  let wOn = false;
+
+  function toggleW() {
+    wOn = !wOn;
+    const toggle    = document.getElementById('w-toggle');
+    const divider   = document.getElementById('card-divider');
+    const metrics   = [document.getElementById('m1'), document.getElementById('m2'), document.getElementById('m3'), document.getElementById('m4')];
+    const belowCard = document.getElementById('below-card');
+    const emptyState= document.getElementById('empty-state');
+
+    toggle.classList.toggle('on', wOn);
+
+    if (wOn) {
+      /* Count value down */
+      animateAmount(13.62, 0, 350);
+
+      /* Collapse stats */
+      divider.classList.add('collapsed');
+      metrics.forEach(m => m.classList.add('collapsed'));
+
+      /* Fade below-card */
+      belowCard.classList.add('hidden');
+
+      /* Fade in empty state */
+      setTimeout(() => {
+        emptyState.style.display = 'flex';
+        requestAnimationFrame(() => emptyState.classList.add('visible'));
+      }, 320);
+
+    } else {
+      /* Hide empty state */
+      emptyState.classList.remove('visible');
+      setTimeout(() => { emptyState.style.display = ''; }, 300);
+
+      /* Restore */
+      setTimeout(() => {
+        divider.classList.remove('collapsed');
+        metrics.forEach(m => m.classList.remove('collapsed'));
+        belowCard.classList.remove('hidden');
+        animateAmount(0, 13.62, 380);
+      }, 220);
+    }
+  }
+
+  function animateAmount(from, to, duration) {
+    const el    = document.getElementById('card-amount');
+    const start = performance.now();
+    function tick(now) {
+      const t    = Math.min((now - start) / duration, 1);
+      const ease = 1 - Math.pow(1 - t, 3);
+      const val  = from + (to - from) * ease;
+      el.textContent = val < 0.005 ? '₹0.00' : '₹' + val.toFixed(2) + 'Cr';
+      if (t < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+</script>
+</body>
+</html>
