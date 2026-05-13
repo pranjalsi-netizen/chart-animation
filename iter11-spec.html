@@ -407,11 +407,11 @@
   /* ── Right: Spec panel ── */
   .spec-panel {
     flex: 1;
-    padding: 40px 48px;
+    padding: 32px 36px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 40px;
+    gap: 24px;
   }
 
   .spec-header { }
@@ -452,7 +452,7 @@
     letter-spacing: 1.5px;
     text-transform: uppercase;
     color: rgba(255,255,255,0.3);
-    margin-bottom: 16px;
+    margin-bottom: 12px;
     padding-bottom: 8px;
     border-bottom: 1px solid rgba(255,255,255,0.06);
   }
@@ -598,6 +598,55 @@
     line-height: 1.3;
   }
   .case-tab.active .case-tab-sub { color: rgba(255,255,255,0.5); }
+
+  /* Simple steps */
+  .simple-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .step {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .step-num {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    font-size: 10px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .step-body { display: flex; flex-direction: column; gap: 5px; }
+  .step-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.8);
+    line-height: 1.4;
+  }
+  .step-rn {
+    font-size: 11px;
+    color: #7B72E9;
+    line-height: 1.5;
+    font-family: 'SF Mono', 'Fira Mono', monospace;
+    background: rgba(123,114,233,0.1);
+    border: 1px solid rgba(123,114,233,0.2);
+    border-radius: 6px;
+    padding: 5px 8px;
+  }
+  .step.note .step-title {
+    font-size: 12.5px;
+    font-weight: 400;
+    color: rgba(255,255,255,0.4);
+  }
 
   /* Divider */
   .spec-divider {
@@ -827,146 +876,94 @@
     <!-- ── CASE A SPECS ── -->
     <div data-spec-case="A">
 
-    <!-- States -->
     <div class="spec-section">
       <div class="spec-section-title">States</div>
       <div class="states-row">
         <div class="state-card">
           <div class="state-label off">W · OFF</div>
-          <div class="state-prop"><span class="state-key">Current value</span><span class="state-val">₹13.62Cr</span></div>
-          <div class="state-prop"><span class="state-key">Stats rows</span><span class="state-val green">Visible</span></div>
-          <div class="state-prop"><span class="state-key">Fund list</span><span class="state-val green">7 funds visible</span></div>
-          <div class="state-prop"><span class="state-key">Toggle</span><span class="state-val muted">White dot</span></div>
+          <div class="state-prop"><span class="state-key">Total value</span><span class="state-val">₹13.62Cr</span></div>
+          <div class="state-prop"><span class="state-key">Stats</span><span class="state-val green">Visible</span></div>
+          <div class="state-prop"><span class="state-key">Funds shown</span><span class="state-val green">7</span></div>
         </div>
         <div class="state-card">
           <div class="state-label on">W · ON</div>
-          <div class="state-prop"><span class="state-key">Current value</span><span class="state-val gold">₹11.54Cr</span></div>
-          <div class="state-prop"><span class="state-key">Stats rows</span><span class="state-val green">Updated</span></div>
-          <div class="state-prop"><span class="state-key">Fund list</span><span class="state-val muted">5 funds (2 removed)</span></div>
-          <div class="state-prop"><span class="state-key">Toggle</span><span class="state-val gold">Golden dot</span></div>
+          <div class="state-prop"><span class="state-key">Total value</span><span class="state-val gold">₹11.54Cr</span></div>
+          <div class="state-prop"><span class="state-key">Stats</span><span class="state-val green">Updated</span></div>
+          <div class="state-prop"><span class="state-key">Funds shown</span><span class="state-val muted">5 (2 removed)</span></div>
         </div>
       </div>
     </div>
 
     <div class="spec-divider"></div>
 
-    <!-- Animation: W ON (Case A) -->
     <div class="spec-section">
-      <div class="spec-section-title">Animation — W Toggle ON</div>
-      <div class="timeline">
-
-        <div class="timeline-item accent">
-          <div class="tl-timing">0 ms</div>
-          <div class="tl-dot"></div>
-          <div class="tl-body">
-            <div class="tl-name">Toggle activates</div>
-            <div class="tl-sub">W pill turns golden. Toggle dot slides right. Immediate.</div>
+      <div class="spec-section-title">When W turns ON</div>
+      <div class="simple-steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <div class="step-title">Toggle pill turns golden</div>
+            <div class="step-rn">Animated.spring on dot translateX · interpolate background color · useNativeDriver: true</div>
           </div>
         </div>
-
-        <div class="timeline-item">
-          <div class="tl-timing">0 – 500 ms</div>
-          <div class="tl-dot"></div>
-          <div class="tl-body">
-            <div class="tl-name">Total value counts down</div>
-            <div class="tl-sub">₹13.62Cr → ₹11.54Cr · rAF counter loop.</div>
-            <div class="tl-pill">easeOutCubic · 500ms</div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <div class="step-title">Ineligible fund rows collapse</div>
+            <div class="step-rn">Animated.parallel([height → 0, opacity → 0]) · 380ms · Easing.out(Easing.quad) · useNativeDriver: false</div>
           </div>
         </div>
-
-        <div class="timeline-item">
-          <div class="tl-timing">0 – 380 ms</div>
-          <div class="tl-dot"></div>
-          <div class="tl-body">
-            <div class="tl-name">Ineligible funds collapse</div>
-            <div class="tl-sub">Aditya Birla + ICICI rows: <code>max-height → 0</code> + <code>opacity → 0</code> + padding clears.</div>
-            <div class="tl-pill">ease · 380ms</div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <div class="step-title">Remaining fund values update</div>
+            <div class="step-rn">Animated.timing opacity → 0 (180ms) · setState new values · opacity → 1 (180ms)</div>
           </div>
         </div>
-
-        <div class="timeline-item gold">
-          <div class="tl-timing">220 ms</div>
-          <div class="tl-dot"></div>
-          <div class="tl-body">
-            <div class="tl-name">Remaining fund values update</div>
-            <div class="tl-sub">Current value per fund fades out → new value fades in. Stats row values swap simultaneously.</div>
-            <div class="tl-pill">opacity fade · 180ms crossfade</div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <div class="step-title">Total counter animates down to ₹11.54Cr</div>
+            <div class="step-rn">setInterval loop with easeOutCubic · update display string in state · 500ms total</div>
           </div>
         </div>
-
-        <div class="timeline-item">
-          <div class="tl-timing">400 ms</div>
-          <div class="tl-dot"></div>
-          <div class="tl-body">
-            <div class="tl-name">Fund count updates</div>
-            <div class="tl-sub">Holdings header: "7 FUNDS" → "5 FUNDS".</div>
-          </div>
-        </div>
-
       </div>
     </div>
 
     <div class="spec-divider"></div>
 
-    <!-- Animation: W OFF (Case A) -->
     <div class="spec-section">
-      <div class="spec-section-title">Animation — W Toggle OFF (Reverse)</div>
-      <div class="timeline">
-
-        <div class="timeline-item accent">
-          <div class="tl-timing">0 ms</div>
-          <div class="tl-dot"></div>
-          <div class="tl-body">
-            <div class="tl-name">Toggle deactivates</div>
-            <div class="tl-sub">W pill returns to white. Immediate.</div>
+      <div class="spec-section-title">When W turns OFF</div>
+      <div class="simple-steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <div class="step-title">Toggle returns to default</div>
+            <div class="step-rn">Reverse Animated.spring · toValue: 0</div>
           </div>
         </div>
-
-        <div class="timeline-item">
-          <div class="tl-timing">0 – 380 ms</div>
-          <div class="tl-dot"></div>
-          <div class="tl-body">
-            <div class="tl-name">Removed funds expand back</div>
-            <div class="tl-sub"><code>max-height</code> + <code>opacity</code> restore on both fund rows.</div>
-            <div class="tl-pill">ease · 380ms</div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <div class="step-title">Removed fund rows expand back</div>
+            <div class="step-rn">Animated.parallel([height → rowHeight, opacity → 1]) · same 380ms · useNativeDriver: false</div>
           </div>
         </div>
-
-        <div class="timeline-item">
-          <div class="tl-timing">120 ms</div>
-          <div class="tl-dot"></div>
-          <div class="tl-body">
-            <div class="tl-name">Fund values + stats restore</div>
-            <div class="tl-sub">Opacity crossfade back to W-OFF values. Fund count → "7 FUNDS".</div>
-            <div class="tl-pill">opacity fade · 180ms crossfade</div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <div class="step-title">Fund values + stats restore</div>
+            <div class="step-rn">Same opacity crossfade · setState W-OFF values · 180ms each direction</div>
           </div>
         </div>
-
-        <div class="timeline-item gold">
-          <div class="tl-timing">0 – 500 ms</div>
-          <div class="tl-dot"></div>
-          <div class="tl-body">
-            <div class="tl-name">Total value counts up</div>
-            <div class="tl-sub">₹11.54Cr → ₹13.62Cr.</div>
-            <div class="tl-pill">easeOutCubic · 500ms</div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <div class="step-title">Total counter animates back up</div>
+            <div class="step-rn">Same setInterval loop · 11.54 → 13.62 · 500ms</div>
           </div>
         </div>
-
       </div>
-    </div>
-
-    <div class="spec-divider"></div>
-
-    <!-- Component specs (Case A) -->
-    <div class="spec-section">
-      <div class="spec-section-title">Component Specs</div>
-      <table class="spec-table">
-        <tr><th>Element</th><th>Property</th><th>Value</th></tr>
-        <tr><td>Summary card</td><td><code>flex-direction</code> · <code>padding</code></td><td><code>column</code> · <code>16px</code></td></tr>
-        <tr><td>Fund row collapse</td><td>via</td><td><code>max-height: 0</code> + <code>overflow: hidden</code> + <code>opacity: 0</code> + <code>padding: 0</code></td></tr>
-        <tr><td>Fund value swap</td><td>via</td><td>Opacity fade to 0, text update, fade to 1 — 180ms crossfade</td></tr>
-        <tr><td>W toggle (ON)</td><td>Track background</td><td><code>linear-gradient(135deg, #FFD98E, #C7A865)</code></td></tr>
-      </table>
     </div>
 
     </div><!-- /data-spec-case="A" -->
@@ -974,166 +971,102 @@
     <!-- ── CASE B SPECS ── -->
     <div data-spec-case="B" style="display:none">
 
-    <!-- States -->
     <div class="spec-section">
       <div class="spec-section-title">States</div>
       <div class="states-row">
         <div class="state-card">
           <div class="state-label off">W · OFF</div>
-          <div class="state-prop"><span class="state-key">Current value</span><span class="state-val">₹13.62Cr</span></div>
-          <div class="state-prop"><span class="state-key">Stats rows</span><span class="state-val green">Visible</span></div>
-          <div class="state-prop"><span class="state-key">Fund list</span><span class="state-val green">7 funds visible</span></div>
+          <div class="state-prop"><span class="state-key">Total value</span><span class="state-val">₹13.62Cr</span></div>
+          <div class="state-prop"><span class="state-key">Stats</span><span class="state-val green">Visible</span></div>
+          <div class="state-prop"><span class="state-key">Fund list</span><span class="state-val green">Visible</span></div>
           <div class="state-prop"><span class="state-key">Empty state</span><span class="state-val muted">Hidden</span></div>
-          <div class="state-prop"><span class="state-key">Toggle</span><span class="state-val muted">White dot</span></div>
         </div>
         <div class="state-card">
           <div class="state-label on">W · ON</div>
-          <div class="state-prop"><span class="state-key">Current value</span><span class="state-val gold">₹0.00</span></div>
-          <div class="state-prop"><span class="state-key">Stats rows</span><span class="state-val muted">Collapsed</span></div>
+          <div class="state-prop"><span class="state-key">Total value</span><span class="state-val gold">₹0.00</span></div>
+          <div class="state-prop"><span class="state-key">Stats</span><span class="state-val muted">Hidden</span></div>
           <div class="state-prop"><span class="state-key">Fund list</span><span class="state-val muted">Hidden</span></div>
           <div class="state-prop"><span class="state-key">Empty state</span><span class="state-val green">Visible</span></div>
-          <div class="state-prop"><span class="state-key">Toggle</span><span class="state-val gold">Golden dot</span></div>
         </div>
       </div>
     </div>
 
     <div class="spec-divider"></div>
 
-    <!-- Animation: W ON (Case B) -->
     <div class="spec-section">
-      <div class="spec-section-title">Animation — W Toggle ON</div>
-      <div class="timeline">
-
-        <div class="timeline-item accent">
-          <div class="tl-timing">0 ms</div>
-          <div class="tl-dot"></div>
-          <div class="tl-body">
-            <div class="tl-name">Toggle activates</div>
-            <div class="tl-sub">W pill turns golden. Toggle dot slides right. Immediate.</div>
+      <div class="spec-section-title">When W turns ON</div>
+      <div class="simple-steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <div class="step-title">Toggle pill turns golden</div>
+            <div class="step-rn">Animated.spring on dot translateX · interpolate background color · useNativeDriver: true</div>
           </div>
         </div>
-
-        <div class="timeline-item">
-          <div class="tl-timing">0 – 350 ms</div>
-          <div class="tl-dot"></div>
-          <div class="tl-body">
-            <div class="tl-name">Current value counts down</div>
-            <div class="tl-sub">₹13.62Cr → ₹0.00 · rAF counter loop.</div>
-            <div class="tl-pill">easeOutCubic · 350ms</div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <div class="step-title">Stats section + fund list fade away</div>
+            <div class="step-rn">Animated.parallel([statsHeight → 0 (320ms), statsOpacity → 0 (320ms), listOpacity → 0 (220ms)]) · useNativeDriver: false for height</div>
           </div>
         </div>
-
-        <div class="timeline-item">
-          <div class="tl-timing">0 – 320 ms</div>
-          <div class="tl-dot"></div>
-          <div class="tl-body">
-            <div class="tl-name">Stats + divider collapse</div>
-            <div class="tl-sub">4 metric rows + dashed divider: <code>max-height → 0</code> + <code>opacity → 0</code> + <code>margin/padding → 0</code></div>
-            <div class="tl-pill">ease · 320ms</div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <div class="step-title">Total counter counts down to ₹0.00</div>
+            <div class="step-rn">setInterval loop with easeOutCubic · update display string in state · 350ms</div>
           </div>
         </div>
-
-        <div class="timeline-item">
-          <div class="tl-timing">0 – 220 ms</div>
-          <div class="tl-dot"></div>
-          <div class="tl-body">
-            <div class="tl-name">Below-card fades out</div>
-            <div class="tl-sub">Notice, view toggle, fund list: <code>opacity → 0</code>. Pointer events removed.</div>
-            <div class="tl-pill">ease · 220ms</div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <div class="step-title">Empty state fades in</div>
+            <div class="step-rn">Animated.sequence([Animated.delay(320), Animated.timing(emptyOpacity, {toValue:1, duration:280})]) · useNativeDriver: true</div>
           </div>
         </div>
-
-        <div class="timeline-item gold">
-          <div class="tl-timing">320 – 600 ms</div>
-          <div class="tl-dot"></div>
-          <div class="tl-body">
-            <div class="tl-name">Empty state fades in</div>
-            <div class="tl-sub">Icon + "No Mutual Funds found" + Discover CTA. Starts after stats have collapsed.</div>
-            <div class="tl-pill">ease · 280ms · delay 320ms</div>
-          </div>
-        </div>
-
       </div>
     </div>
 
     <div class="spec-divider"></div>
 
-    <!-- Animation: W OFF (Case B) -->
     <div class="spec-section">
-      <div class="spec-section-title">Animation — W Toggle OFF (Reverse)</div>
-      <div class="timeline">
-
-        <div class="timeline-item accent">
-          <div class="tl-timing">0 ms</div>
-          <div class="tl-dot"></div>
-          <div class="tl-body">
-            <div class="tl-name">Toggle deactivates</div>
-            <div class="tl-sub">W pill returns to white. Immediate.</div>
+      <div class="spec-section-title">When W turns OFF</div>
+      <div class="simple-steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <div class="step-title">Toggle returns to default + empty state fades out</div>
+            <div class="step-rn">Animated.timing(emptyOpacity, {toValue:0, duration:300}) · unmount or hide after 300ms</div>
           </div>
         </div>
-
-        <div class="timeline-item">
-          <div class="tl-timing">0 – 300 ms</div>
-          <div class="tl-dot"></div>
-          <div class="tl-body">
-            <div class="tl-name">Empty state fades out</div>
-            <div class="tl-sub"><code>opacity → 0</code>, then <code>display: none</code> at 300ms.</div>
-            <div class="tl-pill">ease · 300ms</div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <div class="step-title">Stats + fund list restore after 220ms</div>
+            <div class="step-rn">Animated.parallel([statsHeight → original, statsOpacity → 1, listOpacity → 1]) · 320ms · delay 220ms</div>
           </div>
         </div>
-
-        <div class="timeline-item">
-          <div class="tl-timing">220 – 540 ms</div>
-          <div class="tl-dot"></div>
-          <div class="tl-body">
-            <div class="tl-name">Stats + below-card restore</div>
-            <div class="tl-sub">Stats expand via <code>max-height</code>. Below-card <code>opacity → 1</code>. Starts after empty state gone.</div>
-            <div class="tl-pill">ease · 320ms · delay 220ms</div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <div class="step-title">Total counter animates back up</div>
+            <div class="step-rn">Same setInterval loop · 0 → 13.62 · 380ms · start after 220ms delay</div>
           </div>
         </div>
-
-        <div class="timeline-item gold">
-          <div class="tl-timing">220 – 600 ms</div>
-          <div class="tl-dot"></div>
-          <div class="tl-body">
-            <div class="tl-name">Current value counts up</div>
-            <div class="tl-sub">₹0.00 → ₹13.62Cr, starts with stats expansion.</div>
-            <div class="tl-pill">easeOutCubic · 380ms · delay 220ms</div>
-          </div>
-        </div>
-
       </div>
-    </div>
-
-    <div class="spec-divider"></div>
-
-    <!-- Component specs (Case B) -->
-    <div class="spec-section">
-      <div class="spec-section-title">Component Specs</div>
-      <table class="spec-table">
-        <tr><th>Element</th><th>Property</th><th>Value</th></tr>
-        <tr><td>Summary card</td><td><code>flex-direction</code> · <code>padding</code></td><td><code>column</code> · <code>16px</code></td></tr>
-        <tr><td>Metric rows</td><td>Collapse via</td><td><code>max-height: 0</code> + <code>overflow: hidden</code> + <code>opacity: 0</code></td></tr>
-        <tr><td>Dashed divider</td><td>Collapse via</td><td><code>max-height: 0</code> + <code>margin: 0</code></td></tr>
-        <tr><td>Empty state</td><td>Display</td><td><code>none</code> by default · JS sets <code>flex</code> before opacity fade-in to avoid layout bleed</td></tr>
-        <tr><td>Empty state icon</td><td><code>opacity</code></td><td><code>0.25</code> (muted)</td></tr>
-        <tr><td>Discover CTA</td><td><code>border</code> · <code>border-radius</code></td><td><code>1px solid rgba(255,255,255,0.2)</code> · <code>100px</code></td></tr>
-        <tr><td>W toggle (ON)</td><td>Track background</td><td><code>linear-gradient(135deg, #FFD98E, #C7A865)</code></td></tr>
-      </table>
     </div>
 
     </div><!-- /data-spec-case="B" -->
 
     <div class="spec-divider"></div>
 
-    <!-- Shared Notes -->
     <div class="spec-section">
       <div class="spec-section-title">Notes</div>
-      <table class="spec-table">
-        <tr><td>Card label</td><td>Always shows "Current value with W" — does not change on toggle.</td></tr>
-        <tr><td>Easing function</td><td><code>easeOutCubic: t → 1 - (1-t)³</code> for the counter animation. CSS transitions use native <code>ease</code>.</td></tr>
-        <tr><td>Case A vs B</td><td>Case is determined at data load time — not a user-facing toggle. Show Case A when ≥1 W-eligible fund exists; Case B when none exist.</td></tr>
-      </table>
+      <div class="simple-steps">
+        <div class="step note"><div class="step-title">Case A or B is determined by data — not a user choice. Show Case A if ≥1 W-eligible fund exists, Case B if none do.</div></div>
+        <div class="step note"><div class="step-title">The "Current value with W" label stays the same regardless of toggle state.</div></div>
+        <div class="step note"><div class="step-title">All animations reverse cleanly — toggling W off always restores exact prior state.</div></div>
+      </div>
     </div>
 
   </div><!-- /spec-panel -->
