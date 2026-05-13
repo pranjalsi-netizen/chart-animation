@@ -961,6 +961,52 @@
     }
     body.iter-10 .card-stocks.card-disabled .card-normal-content { display: none; }
     body.iter-10 .card-stocks.card-disabled .card-w-content      { display: flex; flex-direction: column; align-items: flex-end; }
+
+    /* ── Iter-11: MF screen W toggle → empty state ── */
+    body.iter-11 .header .w-toggle       { display: none !important; }
+    body.iter-11 .mf-top-nav .w-toggle   { display: none !important; }
+    body.iter-11 .mf-card-toggle-wrap    { display: flex; }
+
+    body.iter-11 .mf-w-collapsible {
+      overflow: hidden;
+      max-height: 48px;
+      transition: max-height 0.32s ease, opacity 0.25s ease, margin 0.32s ease;
+    }
+    body.iter-11 .mf-w-collapsible.w-hidden {
+      max-height: 0 !important;
+      opacity: 0;
+      margin-top: 0 !important;
+      margin-bottom: 0 !important;
+    }
+    body.iter-11 .mf-below-card { transition: opacity 0.22s ease; }
+    body.iter-11 .mf-below-card.w-hidden { opacity: 0; pointer-events: none; }
+
+    .mf-empty-state {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      padding: 56px 24px 32px;
+      opacity: 0;
+      transition: opacity 0.28s ease;
+    }
+    body.iter-11 .mf-empty-state         { display: flex; }
+    body.iter-11 .mf-empty-state.visible { opacity: 1; }
+    .mf-empty-icon  { opacity: 0.3; }
+    .mf-empty-title {
+      color: rgba(255,255,255,0.55);
+      font-family: 'Sohne', -apple-system, sans-serif;
+      font-size: 14px; font-weight: 400;
+    }
+    .mf-discover-btn {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 20px; border-radius: 100px;
+      border: 1px solid rgba(255,255,255,0.2);
+      background: transparent; color: #F2F5F7;
+      font-family: 'Sohne', -apple-system, sans-serif;
+      font-size: 14px; font-weight: 500; cursor: pointer;
+    }
+
     #sim-panel {
       position: fixed;
       right: 0; top: 0; bottom: 0;
@@ -1449,27 +1495,43 @@
       </div>
     </div>
 
-    <hr class="mf-divider">
+    <hr class="mf-divider mf-w-collapsible">
 
-    <div class="mf-metric">
+    <div class="mf-metric mf-w-collapsible">
       <span class="mf-metric-label">1D returns</span>
       <span class="mf-metric-val" style="color:#04B488;">+₹25.56L &nbsp;<span style="color:rgba(255,255,255,0.4);font-size:12px;">12.33%</span></span>
     </div>
-    <div class="mf-metric">
+    <div class="mf-metric mf-w-collapsible">
       <span class="mf-metric-label">Total returns</span>
       <span class="mf-metric-val" style="color:#04B488;">+₹2.56L &nbsp;<span style="color:rgba(255,255,255,0.4);font-size:12px;">17.56%</span></span>
     </div>
-    <div class="mf-metric">
+    <div class="mf-metric mf-w-collapsible">
       <span class="mf-metric-label">Total invested</span>
       <span class="mf-metric-val">₹9.09Cr</span>
     </div>
-    <div class="mf-metric">
+    <div class="mf-metric mf-w-collapsible">
       <span class="mf-metric-label">XIRR</span>
       <span class="mf-metric-val" style="color:#04B488;">9.09%</span>
     </div>
   </div>
 
-  <!-- Updated notice -->
+  <!-- Iter-11 empty state -->
+  <div class="mf-empty-state">
+    <svg class="mf-empty-icon" width="72" height="60" viewBox="0 0 72 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="20" y="30" width="32" height="20" rx="4" fill="rgba(255,255,255,0.5)"/>
+      <rect x="8"  y="20" width="32" height="20" rx="4" fill="rgba(255,255,255,0.35)"/>
+      <rect x="32" y="20" width="32" height="20" rx="4" fill="rgba(255,255,255,0.35)"/>
+      <rect x="20" y="10" width="32" height="20" rx="4" fill="rgba(255,255,255,0.2)"/>
+    </svg>
+    <div class="mf-empty-title">No Mutual Funds found</div>
+    <button class="mf-discover-btn">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="#F2F5F7" stroke-width="1.2"/><path d="M8 1C8 1 5 4 5 8s3 7 3 7M8 1c0 0 3 3 3 7s-3 7-3 7M1 8h14" stroke="#F2F5F7" stroke-width="1.2" stroke-linecap="round"/></svg>
+      Discover
+    </button>
+  </div>
+
+  <!-- Below-card content -->
+  <div class="mf-below-card">
   <div class="mf-updated">
     <div class="mf-updated-dot">
       <svg width="8" height="8" viewBox="0 0 10 8" fill="none">
@@ -1575,6 +1637,7 @@
   </div>
 
   <div class="mf-bottom-pad"></div>
+  </div><!-- /mf-below-card -->
 
   </div><!-- /#panel-mf -->
 
@@ -1845,6 +1908,14 @@
       <div class="iter-info">
         <div class="iter-name">Value Sort on Toggle</div>
         <div class="iter-tag">Cards reorder highest → lowest</div>
+      </div>
+    </div>
+
+    <div class="iter-item" onclick="switchIter(11)">
+      <div class="iter-badge">11</div>
+      <div class="iter-info">
+        <div class="iter-name">MF Empty State on W</div>
+        <div class="iter-tag">Stats collapse, empty state fades in</div>
       </div>
     </div>
 
@@ -3137,6 +3208,57 @@ window.simFire = function () {
     }
   }
 
+  /* ── Iter-11: MF screen W toggle ── */
+  function iter11ToggleW(toOn) {
+    const panel       = document.getElementById('panel-mf');
+    const amountEl    = panel.querySelector('.mf-card-amount');
+    const collapsibles= Array.from(panel.querySelectorAll('.mf-w-collapsible'));
+    const belowCard   = panel.querySelector('.mf-below-card');
+    const emptyState  = panel.querySelector('.mf-empty-state');
+
+    if (toOn) {
+      /* animate value to 0 */
+      iter11AnimateAmount(13.62, 0, 350);
+
+      /* collapse divider + stats rows */
+      collapsibles.forEach(el => el.classList.add('w-hidden'));
+
+      /* fade out below-card */
+      if (belowCard) belowCard.classList.add('w-hidden');
+
+      /* fade in empty state after content is gone */
+      setTimeout(() => {
+        if (emptyState) emptyState.classList.add('visible');
+      }, 320);
+
+    } else {
+      /* hide empty state */
+      if (emptyState) emptyState.classList.remove('visible');
+
+      /* expand stats + show below-card after empty fades */
+      setTimeout(() => {
+        collapsibles.forEach(el => el.classList.remove('w-hidden'));
+        if (belowCard) belowCard.classList.remove('w-hidden');
+        iter11AnimateAmount(0, 13.62, 380);
+      }, 220);
+    }
+  }
+
+  function iter11AnimateAmount(from, to, duration) {
+    const panel = document.getElementById('panel-mf');
+    const el    = panel ? panel.querySelector('.mf-card-amount') : null;
+    if (!el) return;
+    const start = performance.now();
+    function tick(now) {
+      const t    = Math.min((now - start) / duration, 1);
+      const ease = 1 - Math.pow(1 - t, 3);
+      const val  = from + (to - from) * ease;
+      el.textContent = val < 0.005 ? '₹0.00' : '₹' + val.toFixed(2) + 'Cr';
+      if (t < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+
   window.toggleShowMore9 = function () {
     const container  = document.querySelector('#screen-home .cards');
     const stocksCard = container ? container.querySelector('.card-stocks') : null;
@@ -3166,8 +3288,9 @@ window.simFire = function () {
     const isOn    = btn.classList.contains('on');
     const isIter3 = document.body.classList.contains('iter-3');
     const isIter8 = document.body.classList.contains('iter-8');
-    const isIter9 = document.body.classList.contains('iter-9');
+    const isIter9  = document.body.classList.contains('iter-9');
     const isIter10 = document.body.classList.contains('iter-10');
+    const isIter11 = document.body.classList.contains('iter-11');
 
     /* iter-8: if toggling while on stocks panel, turn ON and switch to MF panel */
     if (isIter8 && document.getElementById('screen-mf').classList.contains('active') &&
@@ -3201,6 +3324,8 @@ window.simFire = function () {
         iter9ToggleW(true);
       } else if (isIter10) {
         iter10ReorderCards(true, true);
+      } else if (isIter11) {
+        iter11ToggleW(true);
       } else {
         stocksCard.classList.add('card-hidden');
       }
@@ -3222,6 +3347,8 @@ window.simFire = function () {
         iter9ToggleW(false);
       } else if (isIter10) {
         iter10ReorderCards(false, true);
+      } else if (isIter11) {
+        iter11ToggleW(false);
       } else {
         const s = stocksCard.style;
         s.transition   = 'none';
@@ -3335,7 +3462,7 @@ window.simFire = function () {
 
     if (wasIter4) stopSkel4Anim();
 
-    document.body.classList.remove('iter-2','iter-3','iter-4','iter-5','iter-6','iter-7','iter-8','iter-9','iter-10');
+    document.body.classList.remove('iter-2','iter-3','iter-4','iter-5','iter-6','iter-7','iter-8','iter-9','iter-10','iter-11');
 
     /* If W is currently ON, reconcile card state for the new iteration */
     if (wIsOn) {
@@ -3372,11 +3499,11 @@ window.simFire = function () {
     if (n === 8)  document.body.classList.add('iter-8');
     if (n === 9)  document.body.classList.add('iter-9');
     if (n === 10) document.body.classList.add('iter-10');
+    if (n === 11) document.body.classList.add('iter-11');
 
     /* iter-10: apply value-sorted order immediately (no animation) */
-    if (n === 10) {
-      iter10ReorderCards(wIsOn, false);
-    }
+    if (n === 10) { iter10ReorderCards(wIsOn, false); }
+
     /* leaving iter-10: restore default card order */
     if (wasIter10 && n !== 10) {
       const container = document.querySelector('#screen-home .cards');
@@ -3387,6 +3514,22 @@ window.simFire = function () {
       });
       stocksCard.classList.remove('card-disabled');
       if (wIsOn) stocksCard.classList.add('card-hidden');
+    }
+
+    /* iter-11: apply W state immediately on switch */
+    if (n === 11) { iter11ToggleW(wIsOn); }
+    /* leaving iter-11: reset MF panel to clean state */
+    if (document.body.classList.contains('iter-11') && n !== 11) {
+      const panel = document.getElementById('panel-mf');
+      if (panel) {
+        panel.querySelectorAll('.mf-w-collapsible').forEach(el => el.classList.remove('w-hidden'));
+        const bc = panel.querySelector('.mf-below-card');
+        if (bc) bc.classList.remove('w-hidden');
+        const es = panel.querySelector('.mf-empty-state');
+        if (es) es.classList.remove('visible');
+        const amt = panel.querySelector('.mf-card-amount');
+        if (amt) amt.textContent = '₹13.62Cr';
+      }
     }
 
     /* Re-sync Stocks tab visibility for the new iteration */
